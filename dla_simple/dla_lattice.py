@@ -1,10 +1,22 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
+""" ***************************************************************
+IMPROVE:
+
+    FEATURES:
+        + multiple attractors
+        + inside circle attractor, triangle attractor, more attractors (functions, shapes...)
+
+    INFRASTRUCTURE:
+        + CLI input
+        + file breakdown
+**************************************************************** """
+
 """ ************************************************************************************
 CLASS
 Implementation of lattice-DLA
-INITIAL CONDITION: one particle, circle around particle
+ATTRACTORS: one particle, outside circle, line
 Spawning area is circle
 4 - neighbourhood is used
 ************************************************************************************** """ 
@@ -36,7 +48,7 @@ class DLA:
         "Additional variables"
         self.plate = np.zeros(self.plate_size)
         self.plate[self.starter] = 1
-        self.initial_condition('line')
+        self.set_attractors('line')
 
         self.occupied = []
         self.occupied.append(np.array(self.starter))
@@ -46,13 +58,13 @@ class DLA:
     PRIVATE
     initialise arbitrary shape
     *********************************************************** """
-    def initial_condition(self, condition):
+    def set_attractors(self, attractor):
 
-        if condition == 'circle':
-            self.inital_condition_circle()
+        if attractor == 'circle':
+            self.set_attractor_circle()
 
-        if condition == 'line':
-            self.initial_condition_line()
+        if attractor == 'line':
+            self.set_attractor__line()
 
     """ ***************************************************
     PRIVATE
@@ -60,7 +72,7 @@ class DLA:
     draws circle
     TODO: scale with user specified values
     ******************************************************* """
-    def inital_condition_circle(self):
+    def set_attractor_circle(self):
 
         for sample in range(100):
 
@@ -76,7 +88,7 @@ class DLA:
     draws line 
     TODO: scale with user specified values
     ******************************************************* """
-    def initial_condition_line(self):
+    def set_attractor__line(self):
 
         cnt_line = 1
 
