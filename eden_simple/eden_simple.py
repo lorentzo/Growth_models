@@ -4,7 +4,7 @@ IMPORTS
 import numpy as np
 import time 
 import matplotlib.pyplot as plt
-
+import time 
 
 """ **********************************************************************************
 IMPROVE:
@@ -55,20 +55,33 @@ class EDEN:
         "check around populated cells"
         for cell in self.populated:
 
-                i = cell[0]
-                j = cell[1]
+            found = self.give_free_slots(cell)
+            
+            for cell in found:
 
-                if self.plate[i, j+1] == 0:
-                    found_grow_sites.add((i, j+1))
+                found_grow_sites.add(cell)
 
-                if self.plate[i, j-1] == 0:
-                    found_grow_sites.add((i, j-1))
+        return list(found_grow_sites)
 
-                if self.plate[i-1, j] == 0:
-                    found_grow_sites.add((i-1, j))
+    
+    def give_free_slots(self, cell):
 
-                if self.plate[i+1, j] == 0:
-                    found_grow_sites.add((i+1, j))
+        found_grow_sites = set()
+
+        i = cell[0]
+        j = cell[1]
+
+        if self.plate[i, j+1] == 0:
+            found_grow_sites.add((i, j+1))
+
+        if self.plate[i, j-1] == 0:
+            found_grow_sites.add((i, j-1))
+
+        if self.plate[i-1, j] == 0:
+            found_grow_sites.add((i-1, j))
+
+        if self.plate[i+1, j] == 0:
+            found_grow_sites.add((i+1, j))
 
         return list(found_grow_sites)
 
@@ -92,8 +105,46 @@ class EDEN:
             self.plate[next_grow_site_coord[0]][next_grow_site_coord[1]] = 1
             self.populated.append([next_grow_site_coord[0], next_grow_site_coord[1]])
 
+            "filter out cells in populated list with no free slots"
+            self.filter_populated()
+
+            if sample % 500 == 0:
+                print("Cells:", sample, len(self.populated))
+                self.plot_populated_with_free_slots()
+
         plt.imshow(self.plate)
         plt.show()
+
+
+    def filter_populated(self):
+
+        filtered = []
+
+        for cell in self.populated:
+
+            free_slots = self.give_free_slots(cell)
+
+            if len(free_slots) > 0:
+
+                filtered.append(cell)
+
+        self.populated = filtered
+
+    
+    def plot_populated_with_free_slots(self):
+
+        back = np.zeros(self.plate_size)
+
+        for cell in self.populated:
+
+            back[cell[0]][cell[1]] = 1
+
+        plt.imshow(back)
+        plt.show()
+
+
+
+
 
 
 """ *************************************************************************************
@@ -105,7 +156,10 @@ Run
 def main():
   
   eden = EDEN([500,500], 5000, [[250,250], [300,300]])
+  start = time.time()
   eden.grow_pattern()
+  end = time.time()
+  print("time:", end-start, "s")
 
 """ **************************************************************************************
 ROOT
