@@ -133,7 +133,10 @@ class EDEN:
         plt.imshow(back)
         plt.show()
 
-
+    """ ********************************************************************************
+    PRIVATE
+    Helper function: saves plates matrices to folder 
+    ******************************************************************************** """
     def create_plots(self):
 
         PATH = os.path.join('.', self.out_folder)
