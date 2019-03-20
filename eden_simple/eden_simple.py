@@ -6,12 +6,15 @@ import time
 import matplotlib.pyplot as plt
 import time 
 import argparse
+import copy
+import os
 
 """ **********************************************************************************
 IMPROVE:
 
     FEATURES:
         + color different clusters
+        + create video using plate matrices in time
         
 ********************************************************************************** """
 
@@ -30,12 +33,15 @@ class EDEN:
     n_iter: scalar
     starters: [[x01, y01], [x02, y02], ....]
     ******************************************************************************* """
-    def __init__(self, plate_size, n_iter, starters):
+    def __init__(self, plate_size, n_iter, starters, talk, out_folder, checkpoint):
 
         "User specified variables"
         self.plate_size = plate_size
         self.n_iter = n_iter
         self.starters = starters
+        self.talk = talk
+        self.out_folder = out_folder
+        self.checkpoint = checkpoint
 
         "Additional variables"
         self.plate = np.zeros(self.plate_size)
@@ -43,6 +49,8 @@ class EDEN:
         for starter in self.starters:
             self.plate[starter[0]][starter[1]] = 1
             self.populated.append([starter[0], starter[1]])
+
+        self.plates_through_iteration = []
 
         
     """ ***************************************************************************
@@ -126,6 +134,24 @@ class EDEN:
         plt.show()
 
 
+    def create_plots(self):
+
+        PATH = os.path.join('.', self.out_folder)
+        if not os.path.exists(PATH):
+            os.mkdir(PATH)
+
+        cnt = 1
+        for plate in self.plates_through_iteration:
+
+            fig = plt.figure()
+            ax = plt.subplot(111)
+            ax.imshow(plate)
+
+            out_file = os.path.join(PATH, str(cnt))
+            fig.savefig(out_file)
+
+            cnt += 1
+
     """ ****************************************************************************
     PUBLIC
     call to grow eden pattern
@@ -148,12 +174,22 @@ class EDEN:
             "filter out cells in populated list with no free slots"
             self.filter_populated()
 
-            if sample % 500 == 0:
+            if sample % self.checkpoint == 0:
                 print("Cells:", sample, len(self.populated))
-                self.plot_populated()
+                self.plates_through_iteration.append(copy.copy(self.plate))
 
-        plt.imshow(self.plate)
-        plt.show()
+                if self.talk == 'y':
+                    
+                    # plot all populated
+                    plt.imshow(self.plate)
+                    plt.show()
+
+                    # plot only populated (with free slots)
+                    self.plot_populated()
+
+        if self.talk == 'y':    
+            plt.imshow(self.plate)
+            plt.show()
 
 
 """ *************************************************************************************
@@ -178,6 +214,18 @@ def main():
                         help="List x01, y01, x02, y02, ...", 
                         type=str)
 
+    parser.add_argument("-talk",
+                        help="Show plots during iterations (y/n)",
+                        type=str)
+
+    parser.add_argument("-checkpoint",
+                        help="Iteration number to save the image",
+                        type=int)
+
+    parser.add_argument("-out-folder",
+                        help="Folder where plots throught iterations will be stored",
+                        type=str)
+
     args = parser.parse_args()
 
     plate_size = args.plate_size
@@ -191,14 +239,22 @@ def main():
     starters = np.array([int(x) for x in starters])
     starters = starters.reshape((-1,2))
 
+    talk = args.talk
+    out_folder = args.out_folder
+    checkpoint = args.checkpoint
+
     print("INPUT:")
     print("Plate size:", plate_size)
     print("n iter:", n_iter)
     print("starters", starters)
+    print("Talk?", talk)
+    print("Out folder", out_folder)
+    print("Checkpoint:", checkpoint)
 
-    eden = EDEN(plate_size, n_iter, starters)
+    eden = EDEN(plate_size, n_iter, starters, talk, out_folder, checkpoint)
     start = time.time()
     eden.grow_pattern()
+    eden.create_plots()
     end = time.time()
     print("time:", end-start, "s")
 
