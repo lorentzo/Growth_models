@@ -5,13 +5,14 @@ import numpy as np
 import time 
 import matplotlib.pyplot as plt
 import time 
+import argparse
 
 """ **********************************************************************************
 IMPROVE:
 
     FEATURES:
         + color different clusters
-        + CLI input
+        
 ********************************************************************************** """
 
 """ ***********************************************************************************
@@ -63,7 +64,10 @@ class EDEN:
 
         return list(found_grow_sites)
 
-    
+    """ ********************************************************************************
+    PUBLIC
+    Helper function: find free slot around given cell
+    ********************************************************************************* """
     def give_free_slots(self, cell):
 
         found_grow_sites = set()
@@ -84,6 +88,42 @@ class EDEN:
             found_grow_sites.add((i+1, j))
 
         return list(found_grow_sites)
+
+
+        """ ****************************************************************************
+    PRIVATE
+    Helper function: filters populated cells with no free neighbours
+    ***************************************************************************** """
+    def filter_populated(self):
+
+        filtered = []
+
+        for cell in self.populated:
+
+            free_slots = self.give_free_slots(cell)
+
+            if len(free_slots) > 0:
+
+                filtered.append(cell)
+
+        self.populated = filtered
+
+    
+    """ ********************************************************************************
+    PRIVATE
+    Helper function: plots populated cells. 
+    Usually called when populated cells are filtered
+    ******************************************************************************** """
+    def plot_populated(self):
+
+        back = np.zeros(self.plate_size)
+
+        for cell in self.populated:
+
+            back[cell[0]][cell[1]] = 1
+
+        plt.imshow(back)
+        plt.show()
 
 
     """ ****************************************************************************
@@ -110,41 +150,10 @@ class EDEN:
 
             if sample % 500 == 0:
                 print("Cells:", sample, len(self.populated))
-                self.plot_populated_with_free_slots()
+                self.plot_populated()
 
         plt.imshow(self.plate)
         plt.show()
-
-
-    def filter_populated(self):
-
-        filtered = []
-
-        for cell in self.populated:
-
-            free_slots = self.give_free_slots(cell)
-
-            if len(free_slots) > 0:
-
-                filtered.append(cell)
-
-        self.populated = filtered
-
-    
-    def plot_populated_with_free_slots(self):
-
-        back = np.zeros(self.plate_size)
-
-        for cell in self.populated:
-
-            back[cell[0]][cell[1]] = 1
-
-        plt.imshow(back)
-        plt.show()
-
-
-
-
 
 
 """ *************************************************************************************
@@ -154,12 +163,44 @@ Create EDEN class object
 Run
 ************************************************************************************* """            
 def main():
-  
-  eden = EDEN([500,500], 5000, [[250,250], [300,300]])
-  start = time.time()
-  eden.grow_pattern()
-  end = time.time()
-  print("time:", end-start, "s")
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-plate-size",
+                        help="Tuple x_max, y_max", 
+                        type=str)
+
+    parser.add_argument("-n-iter",
+                        help="Scalar", 
+                        type=int)
+
+    parser.add_argument("-starters",
+                        help="List x01, y01, x02, y02, ...", 
+                        type=str)
+
+    args = parser.parse_args()
+
+    plate_size = args.plate_size
+    plate_size = plate_size.split(',')
+    plate_size = [int(x) for x in plate_size]
+
+    n_iter = args.n_iter
+
+    starters = args.starters
+    starters = starters.split(',')
+    starters = np.array([int(x) for x in starters])
+    starters = starters.reshape((-1,2))
+
+    print("INPUT:")
+    print("Plate size:", plate_size)
+    print("n iter:", n_iter)
+    print("starters", starters)
+
+    eden = EDEN(plate_size, n_iter, starters)
+    start = time.time()
+    eden.grow_pattern()
+    end = time.time()
+    print("time:", end-start, "s")
 
 """ **************************************************************************************
 ROOT
