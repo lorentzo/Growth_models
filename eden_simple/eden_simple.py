@@ -1,6 +1,7 @@
 """ **********************************************************************************
 IMPORTS
 *********************************************************************************** """
+################################ STANDARD LIBRARIES ###################################
 import numpy as np
 import time 
 import matplotlib.pyplot as plt
@@ -8,6 +9,9 @@ import time
 import argparse
 import copy
 import os
+
+################################ USER LIBRARIES #######################################
+from img_to_video import images_to_video
 
 """ **********************************************************************************
 IMPROVE:
@@ -154,6 +158,11 @@ class EDEN:
             fig.savefig(out_file)
 
             cnt += 1
+
+        # create video from images
+        img_path = os.path.join('.', self.out_folder)
+        video_path = os.path.join('.', self.out_folder)
+        images_to_video(img_path, video_path)
 
     """ ****************************************************************************
     PUBLIC

@@ -5,8 +5,8 @@ IMPORTS
 
 ################################# STANDARD LIBRARIES ##################################
 import numpy as np
-import time 
 import matplotlib.pyplot as plt
+import copy
 
 """ ***********************************************************************************
 CLASS
@@ -27,9 +27,10 @@ class EDEN:
                 chosen which is same as stater cell in DLA model
     ******************************************************************************* """
     def __init__(self, 
-                 plate,
+                 plate_size,
                  n_iter, 
                  starter,
+                 checkpoint,
                  plate_color=0,
                  cell_color=1):
 
@@ -38,12 +39,16 @@ class EDEN:
         self.starter = starter
         self.cell_color = cell_color
         self.plate_color = plate_color
-        self.plate = plate
+        self.plate_size = plate_size
+        self.checkpoint = checkpoint
+        self.shoot = int(n_iter / checkpoint)
 
         # Additional variables
+        self.plate = np.zeros(self.plate_size)
         self.populated = []
         self.plate[self.starter[0]][self.starter[1]] = self.cell_color
         self.populated.append([self.starter[0], self.starter[1]])
+        self.plate_through_iterations = []
 
         
     """ ***************************************************************************
@@ -57,20 +62,53 @@ class EDEN:
         "check around populated cells"
         for cell in self.populated:
 
-                i = cell[0]
-                j = cell[1]
+                found = self.give_free_slots(cell)
 
-                if self.plate[i, j+1] == self.plate_color:
-                    found_grow_sites.add((i, j+1))
+                for cell_i in found:
+                    found_grow_sites.add(cell_i)
 
-                if self.plate[i, j-1] == self.plate_color:
-                    found_grow_sites.add((i, j-1))
+        return list(found_grow_sites)
 
-                if self.plate[i-1, j] == self.plate_color:
-                    found_grow_sites.add((i-1, j))
+    """ ****************************************************************************
+    PRIVATE
+    Helper function: filters populated cells with no free neighbours
+    ***************************************************************************** """
+    def filter_populated(self):
 
-                if self.plate[i+1, j] == self.plate_color:
-                    found_grow_sites.add((i+1, j))
+        filtered = []
+
+        for cell in self.populated:
+
+            free_slots = self.give_free_slots(cell)
+
+            if len(free_slots) > 0:
+
+                filtered.append(cell)
+
+        self.populated = filtered
+
+    """ ********************************************************************************
+    PUBLIC
+    Helper function: find free slot around given cell
+    ********************************************************************************* """
+    def give_free_slots(self, cell):
+
+        found_grow_sites = set()
+
+        i = cell[0]
+        j = cell[1]
+
+        if self.plate[i, j+1] == 0:
+            found_grow_sites.add((i, j+1))
+
+        if self.plate[i, j-1] == 0:
+            found_grow_sites.add((i, j-1))
+
+        if self.plate[i-1, j] == 0:
+            found_grow_sites.add((i-1, j))
+
+        if self.plate[i+1, j] == 0:
+            found_grow_sites.add((i+1, j))
 
         return list(found_grow_sites)
 
@@ -94,16 +132,18 @@ class EDEN:
             self.plate[next_grow_site_coord[0]][next_grow_site_coord[1]] = self.cell_color
             self.populated.append([next_grow_site_coord[0], next_grow_site_coord[1]])
 
-            if sample % 100 == 0:
-                print("EDEN particles", sample)
+            "filter out cells in populated list with no free slots"
+            self.filter_populated()
 
-        plt.imshow(self.plate)
-        plt.show()
+            if sample % self.shoot == 0:
+                print("EDEN particles", sample, len(self.populated))
+                self.plate_through_iterations.append(copy.copy(self.plate))
+
 
 
     """ ******************************************************************************
     PUBLIC
-    Fetch created eden pattern
+    Fetch created eden patterns
     ****************************************************************************** """
-    def give_plate(self):
-        return self.plate
+    def give_plates(self):
+        return self.plate_through_iterations

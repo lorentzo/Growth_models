@@ -9,6 +9,9 @@ import copy
 import os
 import time
 
+############################### USER LIBRARIES #########################################
+from img_to_video import images_to_video
+
 """ ************************************************************************************
 IMPROVE:
 
@@ -234,7 +237,11 @@ class DLA:
 
             out_file = os.path.join(PATH, str(cnt))
             fig.savefig(out_file)
-            
+
+        # create video from images
+        img_path = os.path.join('.', self.out_folder)
+        video_path = os.path.join('.', self.out_folder)
+        images_to_video(img_path, video_path)
 
     """ ***********************************************************
     Public function

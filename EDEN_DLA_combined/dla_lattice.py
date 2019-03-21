@@ -5,6 +5,7 @@ IMPORTS
 ################################# STANDARD IMPORTS #####################################
 import numpy as np 
 import matplotlib.pyplot as plt
+import copy
 
 
 """ ************************************************************************************
@@ -28,13 +29,14 @@ class DLA:
     NOTE: radius_jump > radius spawn, radius_kill > radius_jump
     ********************************************************************** """
     def __init__(self, 
-                 plate,
+                 plate_size,
                  n_iter, 
                  starter, 
                  dla_attractor,
                  radius_spawn, 
                  radius_kill, 
                  radius_jump,
+                 checkpoint,
                  plate_color=0,
                  cell_color=2,
                  test_color=3):
@@ -50,20 +52,24 @@ class DLA:
         self.radius_jump_squared = np.power(self.radius_jump, 2)
 
         self.n_iter = n_iter
-        self.plate = plate
+        self.plate_size = plate_size
         self.starter = starter
         self.dla_attractor = dla_attractor
+        self.checkpoint = checkpoint
+        self.shoot = int(n_iter / checkpoint)
 
         self.plate_color = plate_color
         self.cell_color = cell_color
         self.test_color = test_color
 
         # Additional variables
+        self.plate = np.zeros(self.plate_size)
         self.plate[self.starter[0], self.starter[1]] = self.cell_color
-        #self.set_attractors(self.dla_attractor)
+        self.set_attractors(self.dla_attractor)
 
         self.occupied = []
         self.occupied.append(np.array(self.starter))
+        self.plate_throught_iterations = []
 
     
     """ *******************************************************
@@ -76,7 +82,7 @@ class DLA:
             self.set_attractor_circle()
 
         if attractor == 'line':
-            self.set_attractor__line()
+            self.set_attractor_line()
 
         if attractor == 'none':
             pass
@@ -103,7 +109,7 @@ class DLA:
     draws line 
     TODO: scale with user specified values
     ******************************************************* """
-    def set_attractor__line(self):
+    def set_attractor_line(self):
 
         cnt_line = 1
 
@@ -218,18 +224,14 @@ class DLA:
             # mark position on plate
             self.plate[dla_point[0]][dla_point[1]] = self.cell_color
 
-            if particle % 100 == 0:
+            if particle % self.shoot == 0:
                 print("DLA Particles:", particle)
-
-        # draw the plate
-        plt.imshow(self.plate)
-        plt.show()
-
+                self.plate_throught_iterations.append(copy.copy(self.plate))
 
     """ **************************************************************
     PUBLIC
     Fetch created dla pattern
     ************************************************************** """
-    def give_plate(self):
-        return self.plate
+    def give_plates(self):
+        return self.plate_throught_iterations
 

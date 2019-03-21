@@ -1,0 +1,1 @@
+python eden_dla_comb.py -plate-size 500,500 -n-iter-eden 3000 -n-iter-dla 500 -starter 250,250 -dla-attractor none -dla-r-spawn 60 -dla-r-kill 80 -dla-r-jump 70 -checkpoint 60 -out-folder result
