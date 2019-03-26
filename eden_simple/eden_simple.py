@@ -18,7 +18,6 @@ IMPROVE:
 
     FEATURES:
         + color different clusters
-        + create video using plate matrices in time
         
 ********************************************************************************** """
 
