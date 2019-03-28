@@ -89,13 +89,13 @@ class Leaf():
     """ *********************************************************************
     CONSTRUCTOR
     ********************************************************************* """
-    def __init__(self, spread_xy, spread_z):
+    def __init__(self, spread_xy, spread_z, z_height):
         
         # user defined
         # random points for x,y,z
         self.position = np.random.rand(3) * spread_xy - (spread_xy / 2)
         # as we want primary 2D, z coordinate should have smaller spread
-        self.position[2] = np.random.rand(1)[0] * spread_z
+        self.position[2] = np.random.rand(1)[0] * spread_z + z_height
 
         # additional variables
         self.reached = False
@@ -123,7 +123,8 @@ class SCA():
                 max_dist, 
                 min_dist, 
                 leaves_xy_spread,
-                leaves_z_spread):
+                leaves_z_spread,
+                z_height):
 
         # user defined
         self.n_leaves = n_leaves
@@ -132,12 +133,13 @@ class SCA():
         self.min_dist = min_dist
         self.leaves_xy_spread = leaves_xy_spread
         self.leaves_z_spread = leaves_z_spread
+        self.z_height = z_height
         
         # additional variables
         self.leaves = []
         self.branches = []
         for i in range(self.n_leaves):
-            self.leaves.append(Leaf(self.leaves_xy_spread, self.leaves_z_spread))
+            self.leaves.append(Leaf(self.leaves_xy_spread, self.leaves_z_spread, self.z_height))
 
         # create root of the tree (point without parent) and turn its direction to leafs
         self.root = Branch(self.root_position, None, None)

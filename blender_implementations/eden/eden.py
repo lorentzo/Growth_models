@@ -145,7 +145,7 @@ class EDEN:
             # render scene
             if sample % render_iter == 0:
                 bpy.context.scene.render.filepath = os.path.join(render_path,str(sample))
-                bpy.ops.render.render(write_still=True)
+                #bpy.ops.render.render(write_still=True)
 
 """ ************************************************************************************** 
 MAIN
@@ -165,7 +165,7 @@ def main():
     render_path = '/home/lovro/Documents/FER/diplomski/Growth_models/blender_implementations/eden/izlazi_eden'
     
     # configure eden growth, grow and render
-    eden = EDEN([100,100], 2000, [50,50])
+    eden = EDEN([100,100], 500, [50,50])
     eden.grow_pattern(render_iter, render_path)
 
 """ ************************************************************************************** 

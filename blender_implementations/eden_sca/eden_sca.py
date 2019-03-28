@@ -1,4 +1,4 @@
-#############################################################################
+ #############################################################################
 # DESCRIPTION:
 # biofilm spreading based on Eden's growth model and SCA model
 #############################################################################
@@ -33,8 +33,10 @@ class eden_sca:
                 sca_min_dist,
                 sca_xy_leaves_spread,
                 sca_z_leaves_spread,
+                z_height,
                 render_path,
-                render_checkpoint):
+                render_checkpoint
+                ):
 
 
         # user defined
@@ -49,6 +51,7 @@ class eden_sca:
         self.sca_z_leaves_spread = sca_z_leaves_spread
         self.render_path = render_path
         self.render_checkpoint = render_checkpoint
+        self.z_height = z_height
 
         # additional variables
         self.eden = None
@@ -74,7 +77,8 @@ class eden_sca:
                   self.sca_max_dist,
                   self.sca_min_dist,
                   self.sca_xy_leaves_spread,
-                  self.sca_z_leaves_spread)
+                  self.sca_z_leaves_spread,
+                  self.z_height)
 
         # grow eden and take locations
         self.eden.grow()
@@ -105,7 +109,7 @@ class eden_sca:
         eden_rendering_done = False
         sca_rendering_done = False
         
-        self.sca.show_leaves()
+        #self.sca.show_leaves()
 
         while True:
 
@@ -124,7 +128,7 @@ class eden_sca:
             # render scene
             if curr_iter % self.render_checkpoint == 0:
                 bpy.context.scene.render.filepath = os.path.join(self.render_path, str(curr_iter))
-                bpy.ops.render.render(write_still=True)
+                #bpy.ops.render.render(write_still=True)
                 
             curr_iter += 1
 
@@ -148,7 +152,7 @@ def main():
     render_path = '/home/lovro/Documents/FER/diplomski/Growth_models/blender_implementations/eden_sca/common_out'
 
     es = eden_sca([500,500], 1000, [250,250],
-                  100, [10,10,10], 1, 0.1, 20, 4,
+                  50, [10,10,0], 10, 2, 20, 0, 2,
                   render_path, 50)
 
     es.grow()
