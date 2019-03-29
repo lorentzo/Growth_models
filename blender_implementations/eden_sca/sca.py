@@ -73,7 +73,7 @@ class Branch():
                 pos = np.array(self.position)
                 element = mball.elements.new()
                 element.co = pos
-                element.radius = 1.0
+                element.radius = 0.5
 
                 # alternatively add sphere mesh instead of metamesh
                 #bpy.ops.mesh.primitive_uv_sphere_add(location=pos, size=0.4, segments=5)
@@ -89,16 +89,28 @@ class Leaf():
     """ *********************************************************************
     CONSTRUCTOR
     ********************************************************************* """
-    def __init__(self, spread_xy, spread_z, z_height):
+    def __init__(self, center, spread):
         
         # user defined
-        # random points for x,y,z
-        self.position = np.random.rand(3) * spread_xy - (spread_xy / 2)
-        # as we want primary 2D, z coordinate should have smaller spread
-        self.position[2] = np.random.rand(1)[0] * spread_z + z_height
-
+        self.center = center
+        self.spread = spread
+        
         # additional variables
+        self.position = self.calculate_leaf_position()
         self.reached = False
+
+    """ *********************************************************************
+    PUBLIC HELPER FUNCTION
+    Calculate leaf position based on center and spread
+    ********************************************************************* """
+    def calculate_leaf_position(self):
+
+        x = np.random.rand(1)[0] * self.spread[0] - self.spread[0] / 2 + self.center[0]
+        y = np.random.rand(1)[0] * self.spread[1] - self.spread[1] / 2 + self.center[1]
+        z = np.random.rand(1)[0] * self.spread[2] - self.spread[2] / 2 + self.center[2]
+    
+
+        return [x,y,z]
 
     """ *********************************************************************
     PUBLIC HELPER FUNCTION
@@ -116,39 +128,40 @@ class SCA():
 
     """ *********************************************************************
     CONSTRUCTOR
+        root_position: [xr, yr, zr]
+        leaf_cloud_center: [xl, yl, zl]
+        leaf_spread: [sx, sy, sz]
+        n_leaves: scalar
+        growth_dist: {'min':min_dist, 'max':max_dist}
     ********************************************************************* """
     def __init__(self, 
+                root_position,
+                leaves_cloud_center,
+                leaves_spread,
                 n_leaves, 
-                root_position, 
-                max_dist, 
-                min_dist, 
-                leaves_xy_spread,
-                leaves_z_spread,
-                z_height):
+                growth_dist):
 
         # user defined
-        self.n_leaves = n_leaves
         self.root_position = root_position
-        self.max_dist = max_dist
-        self.min_dist = min_dist
-        self.leaves_xy_spread = leaves_xy_spread
-        self.leaves_z_spread = leaves_z_spread
-        self.z_height = z_height
+        self.leaf_cloud_center = leaves_cloud_center
+        self.leaves_spread = leaves_spread
+        self.n_leaves = n_leaves
+        self.growth_dist = growth_dist
         
         # additional variables
+
+        # add leaf cloud
         self.leaves = []
-        self.branches = []
         for i in range(self.n_leaves):
-            self.leaves.append(Leaf(self.leaves_xy_spread, self.leaves_z_spread, self.z_height))
+            self.leaves.append(Leaf(self.leaf_cloud_center, self.leaves_spread))
 
         # create root of the tree (point without parent) and turn its direction to leafs
+        self.branches = []
         self.root = Branch(self.root_position, None, None)
         closest_leaf_to_root = self.find_closest_leaf_to_branch(self.root)
         root_direction = np.array(closest_leaf_to_root.position) - np.array(self.root.position)
         root_direction /= np.linalg.norm(root_direction)
         self.root.direction = root_direction
-
-        # add root to branches
         self.branches.append(self.root)
 
 
@@ -197,7 +210,7 @@ class SCA():
 
                 dist = np.linalg.norm(np.array(self.leaves[i].position)-np.array(curr_branch.position))
 
-                if dist < self.max_dist:
+                if dist < self.growth_dist['max']:
                     found = True
 
             # create a new branch
@@ -235,7 +248,7 @@ class SCA():
                     dist = np.linalg.norm(np.array(leaf.position) - np.array(branch.position))
 
                     # for current branch leaf is too close. Leaf should not be considered
-                    if dist < self.min_dist:
+                    if dist < self.growth_dist['min']:
                         leaf.riched = True
                         n_reached += 1
                         closest_branch = None
