@@ -32,8 +32,7 @@ class eden_sca:
                 sca_n_leaves,
                 sca_growth_dist,
                 render_path,
-                render_checkpoint
-                ):
+                render_checkpoint):
 
 
         # user defined
@@ -49,28 +48,15 @@ class eden_sca:
         self.render_checkpoint = render_checkpoint
 
         # additional variables
-        self.eden = None
-        self.sca_layer_1 = []
-        
-
-    """ ******************************************************************* 
-    PUBLIC FUNCTION
-    call to grow
-    ******************************************************************** """
-    def grow(self):
-
-        # configure eden
         self.eden = EDEN(self.plate_size, 
                     self.eden_n_iter, 
                     self.eden_starter)
 
-        # On plate one eden layer will be used
-        # grow eden. Object will store results
         self.eden.grow()
 
-        # one one eden layer multiple SCA will be used. Configure layer 1
-        self.configure_sca_layer_1()
-        # grow sca. Object will store results
+
+        self.sca_layer_1 = self.configure_sca_layer_1([1,4], 10, [0,0,2])
+
         for sca in self.sca_layer_1:
             sca.grow()
 
@@ -80,7 +66,9 @@ class eden_sca:
     ******************************************************************** """
     def configure_sca_layer_1(self, upper_lower_n_sca_bound,
                                     root_center_distance,
-                                    leaf_clout_center):
+                                    leaf_cloud_center):
+
+        sca_layer = []
 
         # choose random number of SCAs 
         n_sca = np.random.randint(upper_lower_n_sca_bound[0], upper_lower_n_sca_bound[1])
@@ -97,22 +85,24 @@ class eden_sca:
         # generate leaf cloud centers 
         leaf_centers = []
         for i in range(n_sca):
-            leaf_centers.append(leaf_clout_center)
+            leaf_centers.append(leaf_cloud_center)
 
         # create objects and store
         for i in range(n_sca):
-            self.sca_layer_1.append(SCA(root_centers[i],
+            sca_layer.append(SCA(root_centers[i],
                                 leaf_centers[i],
                                 self.sca_leaves_spread,
                                 self.sca_n_leaves,
                                 self.sca_growth_dist))
+
+        return sca_layer
             
 
     """ ******************************************************************* 
     PUBLIC FUNCTION
     call to render
     ******************************************************************** """
-    def render(self):
+    def display_and_render(self):
 
         # get active scene 
         scene = bpy.context.scene
@@ -143,6 +133,7 @@ class eden_sca:
 
             # EDEN MESH ITERATION
             if curr_iter < len(self.eden.populated_all):
+                self.show_eden_iter(eden_metamesh, curr_iter)
                 self.eden.show(eden_metamesh, curr_iter)
                 pass
             else:
@@ -152,9 +143,11 @@ class eden_sca:
             for i in range(len(self.sca_layer_1)):
 
                 sca = self.sca_layer_1[i]
+                sca_mesh = sca_layer_1_metamesh[i]
 
                 if curr_iter < len(sca.branches):
-                    sca.show_branches(sca_layer_1_metamesh[i], curr_iter)
+
+                    self.show_branch(sca, curr_iter, sca_mesh, 1, 0.5)
                 else:
                     sca_rendering_cnt += 1
 
@@ -172,7 +165,50 @@ class eden_sca:
             if sca_rendering_done and eden_rendering_done:
                 break
 
-        
+
+    """ ******************************************************************
+    PUBLIC HELPER FUNCTION
+    Using Blender metamesh display branch between parent and current branch
+    ****************************************************************** """
+    def show_branch(self, sca, iter, metamesh, n_samples, element_radius):
+
+        branch = sca.branches[iter]
+
+        # if distance between parent and current branch is large use interpolation
+        delta_t = 1 / n_samples
+
+        if branch.parent != None:
+
+            t = 0
+            for sample in range(n_samples):
+
+                # add new metamesh element
+                "(1-t) * np.array(branch.parent.position) + t *"
+                pos = np.array(branch.position)
+                element = metamesh.elements.new()
+                element.co = pos
+                element.radius = element_radius
+
+                # alternatively add sphere mesh instead of metamesh
+                #bpy.ops.mesh.primitive_uv_sphere_add(location=pos, size=0.4, segments=5)
+
+                t += delta_t
+
+    """ ****************************************************************************
+    PUBLIC HELPER FUNCTION
+    using blender mesh display growth for specific iteration
+    NOTE: populated_all contains all populated cells in order they were populated
+    **************************************************************************** """
+    def show_eden_iter(self, metamesh, iter,):
+
+        cell = self.eden.populated_all[iter]
+
+        # move metaball in direction of new cell
+        element = metamesh.elements.new()
+        element.co = self.eden.mapper[(cell[0], cell[1])]
+        element.radius = 2
+
+
 
 """ ******************************************************************* 
 MAIN
@@ -187,8 +223,7 @@ def main():
     bpy.data.objects["Camera"].rotation_euler[1] = 0
     bpy.data.objects["Camera"].rotation_euler[2] = 0
 
-    # render path
-    
+    # eden sca configuration    
     plate_size = [500,500]
     eden_n_iter = 2200
     eden_starter = [250,250]
@@ -207,9 +242,7 @@ def main():
                 render_path = render_path,
                 render_checkpoint = render_checkpoint)
 
-    es.grow()
-    es.render()
-
+    es.display_and_render()
 
 
 """ ******************************************************************* 

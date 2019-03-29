@@ -118,7 +118,7 @@ class EDEN:
     def grow_pattern(self, render_iter, render_path):
         
         # create starter metaball object
-        bpy.ops.object.metaball_add(type='PLANE', location=self.mapper[self.starter[0], self.starter[1]])
+        bpy.ops.object.metaball_add(type='PLANE', location=self.mapper[self.starter[0], self.starter[1]], radius=0.5)
         obj = bpy.context.active_object.data
 
         for sample in range(self.n_iter):
@@ -137,7 +137,7 @@ class EDEN:
             # move metaball in direction of new cell
             element = obj.elements.new()
             element.co = self.mapper[(next_grow_site_coord[0], next_grow_site_coord[1])]
-            element.radius = 2
+            element.radius = 1.3
 
             # filter out cells in populated list with no free slots
             self.filter_populated()

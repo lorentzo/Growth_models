@@ -54,31 +54,7 @@ class Branch():
         next_branch = Branch(next_position, self, copy.copy(self.direction))
         return next_branch
 
-    """ ******************************************************************
-    PUBLIC HELPER FUNCTION
-    Using Blender metamesh display branch between parent and current branch
-    ****************************************************************** """
-    def show(self, mball, n_samples):
 
-        # if distance between parent and current branch is large use interpolation
-        delta_t = 1 / n_samples
-
-        if self.parent != None:
-
-            t = 0
-            for sample in range(n_samples):
-
-                # add new metamesh element
-                "(1-t) * np.array(self.parent.position) + t *"
-                pos = np.array(self.position)
-                element = mball.elements.new()
-                element.co = pos
-                element.radius = 0.5
-
-                # alternatively add sphere mesh instead of metamesh
-                #bpy.ops.mesh.primitive_uv_sphere_add(location=pos, size=0.4, segments=5)
-
-                t += delta_t
 
 """ *********************************************************************
 CLASS
@@ -282,14 +258,7 @@ class SCA():
 
                     branch.reset()
 
-    """ *********************************************************************
-    PUBLIC HELPER FUNCTION
-    Using blender mesh display all branches
-    ********************************************************************* """
-    def show_branches(self, metamesh, iter):
 
-        branch = self.branches[iter]
-        branch.show(metamesh, 1)
 
     """ *********************************************************************
     PUBLIC HELPER FUNCTION
