@@ -16,7 +16,6 @@ import os
 CLASS
 Eden's growth model. One plate, one starting position.
 ************************************************************************* """
-
 class EDEN:
 
     """ ******************************************************************************
@@ -32,12 +31,15 @@ class EDEN:
         self.n_iter = n_iter
         self.starter = starter
 
-        # Additional variables: plate and populated list (that will be filtered)
+        # Additional variables: plate 
         self.plate = np.zeros(self.plate_size)
-        self.populated = []
         self.plate[self.starter[0]][self.starter[1]] = 1
+        
+        # populated list (that will be filtered)
+        self.populated = []
         self.populated.append([self.starter[0], self.starter[1]])
-        # array for keeping the track of all added cells
+
+        # populated list for keeping the track of all added cells
         self.populated_all = []
         self.populated_all.append([self.starter[0], self.starter[1]])
 
@@ -70,7 +72,7 @@ class EDEN:
 
     """ ********************************************************************************
     PUBLIC
-    Helper function: find free slot around given cell
+    Helper function: find free slot around given cell (4-neigh)
     ********************************************************************************* """
     def give_free_slots(self, cell):
 
@@ -110,7 +112,7 @@ class EDEN:
 
                 filtered.append(cell)
 
-        self.populated = filtered
+        return filtered
 
 
 
@@ -135,20 +137,7 @@ class EDEN:
             self.populated_all.append([next_grow_site_coord[0], next_grow_site_coord[1]])
 
             # filter out cells in populated list with no free slots
-            self.filter_populated()
+            self.population = self.filter_populated()
 
 
-    """ ****************************************************************************
-    PUBLIC HELPER FUNCTION
-    using blender mesh display growth for specific iteration
-    NOTE: populated_all contains all populated cells in order they were populated
-    **************************************************************************** """
-    def show(self, metamesh, iter):
-
-        cell = self.populated_all[iter]
-
-        # move metaball in direction of new cell
-        element = metamesh.elements.new()
-        element.co = self.mapper[(cell[0], cell[1])]
-        element.radius = 2
 

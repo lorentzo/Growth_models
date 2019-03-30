@@ -36,6 +36,7 @@ class Branch():
         # additional variables
         self.count = 0
         self.original_direction = copy.copy(direction)
+        
 
     """ ******************************************************************
     PUBLIC HELPER FUNCTION
@@ -55,7 +56,6 @@ class Branch():
         return next_branch
 
 
-
 """ *********************************************************************
 CLASS
 Defining position of leaf
@@ -64,6 +64,8 @@ class Leaf():
 
     """ *********************************************************************
     CONSTRUCTOR
+        center: [xc, yc, zc]
+        spread: [xs, ys, zs]
     ********************************************************************* """
     def __init__(self, center, spread):
         
@@ -85,15 +87,7 @@ class Leaf():
         y = np.random.rand(1)[0] * self.spread[1] - self.spread[1] / 2 + self.center[1]
         z = np.random.rand(1)[0] * self.spread[2] - self.spread[2] / 2 + self.center[2]
     
-
         return [x,y,z]
-
-    """ *********************************************************************
-    PUBLIC HELPER FUNCTION
-    Using Blender mesh display leaf position
-    ********************************************************************* """
-    def show(self, radius):
-        bpy.ops.mesh.primitive_cube_add(location=self.position, radius=radius)
 
 """ *********************************************************************
 CLASS
@@ -115,7 +109,8 @@ class SCA():
                 leaves_cloud_center,
                 leaves_spread,
                 n_leaves, 
-                growth_dist):
+                growth_dist,
+                branch_thickness):
 
         # user defined
         self.root_position = root_position
@@ -123,6 +118,7 @@ class SCA():
         self.leaves_spread = leaves_spread
         self.n_leaves = n_leaves
         self.growth_dist = growth_dist
+        self.branch_thickness  = branch_thickness
         
         # additional variables
 
@@ -206,7 +202,7 @@ class SCA():
         n_reached = 0
 
         # grow branches as long exist leaves that are not close to branches 
-        while n_reached < self.n_leaves:
+        while n_reached <= self.n_leaves:
 
             # for every leaf
             for leaf in self.leaves:
@@ -257,13 +253,3 @@ class SCA():
                         self.branches.append(new_branch) 
 
                     branch.reset()
-
-
-
-    """ *********************************************************************
-    PUBLIC HELPER FUNCTION
-    Using blender mesh display all leaves
-    ********************************************************************* """
-    def show_leaves(self):
-        for leaf in self.leaves:
-            leaf.show(0.3)
