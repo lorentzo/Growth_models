@@ -60,24 +60,44 @@ class Branch():
     ****************************************************************** """
     def show(self, mball, n_samples):
 
-        # if distance between parent and current branch is large use interpolation
-        delta_t = 1 / n_samples
+        # NOTE if distance between parent and current branch is large use interpolation
+    
+        element = mball.elements.new()
+        element.co = self.position
+        element.radius = 1.0
 
-        if self.parent != None:
+        
+    """ ******************************************************************
+    PUBLIC HELPER FUNCTION
+    Using Blender cylinder mesh display branch between parent and current branch
+    # alternatively add sphere mesh instead of cylinder
+    #bpy.ops.mesh.primitive_uv_sphere_add(location=pos, size=0.4, segments=5)
+    ****************************************************************** """
+    def show_tubular(self, thickness):
 
-            t = 0
-            for sample in range(n_samples):
+        if self.parent == None:
+            return
 
-                # add new metamesh element
-                pos = (1-t) * np.array(self.parent.position) + t * np.array(self.position)
-                element = mball.elements.new()
-                element.co = pos
-                element.radius = 1.0
+        dx = self.position[0] - self.parent.position[0]
+        dy = self.position[1] - self.parent.position[1]
+        dz = self.position[2] - self.parent.position[2]
 
-                # alternatively add sphere mesh instead of metamesh
-                #bpy.ops.mesh.primitive_uv_sphere_add(location=pos, size=0.4, segments=5)
+        dist = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
 
-                t += delta_t
+        bpy.ops.mesh.primitive_cylinder_add(radius=thickness,
+                                            depth=dist,
+                                            location=(dx/2 + self.position[0],
+                                                      dy/2 + self.position[1],
+                                                      dz/2 + self.position[2]))
+        
+        phi = math.atan2(dy, dx)
+        theta = math.acos(dz/dist)
+
+        bpy.context.object.rotation_euler[1] = theta
+        bpy.context.object.rotation_euler[2] = phi
+
+
+
 
 """ *********************************************************************
 CLASS
@@ -279,11 +299,14 @@ class Tree():
             # add metamesh object in branch direction
             branch.show(mball, 1)
 
+            # add cylinder in branch direction
+            #branch.show_tubular(0.1)
+
             # render
             if sample % iter_render == 0:
                 cnt[0] += 1
                 bpy.context.scene.render.filepath = os.path.join(render_path, str(cnt[0]))
-                bpy.ops.render.render(write_still=True)
+                #bpy.ops.render.render(write_still=True)
 
     """ *********************************************************************
     PUBLIC HELPER FUNCTION
@@ -318,6 +341,7 @@ def main():
     tree1.grow_through_point_cloud()
     tree1.show_branches(cnt, 50, render_path)
     
+    """
     # second tree
     tree2 = Tree(100, [50,50,50], 10, 2, 70, 5)
     tree2.show_leaves()
@@ -331,6 +355,7 @@ def main():
     tree3.grow_to_point_cloud()
     tree3.grow_through_point_cloud()
     tree3.show_branches(cnt, 50, render_path)
+    """
     
 """ ************************************************************************************** 
 ROOT
