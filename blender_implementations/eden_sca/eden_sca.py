@@ -27,6 +27,7 @@ class eden_sca:
     def __init__(self, 
                 plate_size,
                 eden_n_iter,
+                eden2_n_iter,
                 eden_starter,
                 render_path,
                 render_checkpoint):
@@ -35,6 +36,7 @@ class eden_sca:
         # user defined variables
         self.plate_size = plate_size
         self.eden_n_iter = eden_n_iter
+        self.eden2_n_iter = eden2_n_iter
         self.eden_starter = eden_starter
 
         self.render_path = render_path
@@ -47,8 +49,15 @@ class eden_sca:
         # grow eden object
         self.eden.grow()
 
+        # configure another eden object, this one is smaller and on a top of previous
+        self.eden2 = EDEN(self.plate_size, 
+                    self.eden2_n_iter, 
+                    self.eden_starter)
+        # grow eden object
+        self.eden2.grow()
+
         # tubes will be defined with more layers of sca. Every sca layer will contain more sca objects
-        self.sca_layer_1 = self.configure_sca_layer(lower_upper_n_sca=[4,5],
+        self.sca_layer_1 = self.configure_sca_layer(lower_upper_n_sca=[5,7],
                                                     root_center_distance=7,
                                                     leaf_cloud_center=[0,0,2],
                                                     eden_layer_center=[0,0,0],
@@ -57,23 +66,23 @@ class eden_sca:
                                                     growth_dist={'min':1, 'max':5},
                                                     branch_thickenss=0.9)
 
-        self.sca_layer_2 = self.configure_sca_layer(lower_upper_n_sca=[5,7],
+        self.sca_layer_2 = self.configure_sca_layer(lower_upper_n_sca=[8,10],
                                                     root_center_distance=14,
                                                     leaf_cloud_center=[0,0,2],
                                                     eden_layer_center=[0,0,0],
                                                     n_leaves=20,
                                                     leaves_spread=[20,20,0],
                                                     growth_dist={'min':2, 'max':8},
-                                                    branch_thickenss=1.2)
+                                                    branch_thickenss=1.1)
 
-        self.sca_layer_3 = self.configure_sca_layer(lower_upper_n_sca=[5,7],
-                                                    root_center_distance=20,
+        self.sca_layer_3 = self.configure_sca_layer(lower_upper_n_sca=[9,12],
+                                                    root_center_distance=23,
                                                     leaf_cloud_center=[0,0,2],
                                                     eden_layer_center=[0,0,0],
-                                                    n_leaves=20,
-                                                    leaves_spread=[40,40,0],
+                                                    n_leaves=15,
+                                                    leaves_spread=[30,30,0],
                                                     growth_dist={'min':2, 'max':8},
-                                                    branch_thickenss=1.5)
+                                                    branch_thickenss=1.2)
 
         # grow all sca objects in sca layer
         for sca in self.sca_layer_1:
@@ -150,23 +159,35 @@ class eden_sca:
         scene = bpy.context.scene
 
         # create starter metaball object for EDEN
-        eden_metamesh_datablock = self.create_metamesh_object(1,
-                                                              scene,
-                                                              "MetaEden",
-                                                              "MetaEden",
-                                                              (0.3, 0.25, 0.4))
+        eden_metamesh_datablock = self.create_metamesh_object(n_objects=1,
+                                                              scene=scene,
+                                                              data_block_name="MetaEden",
+                                                              object_name="MetaEden",
+                                                              rgb=(0.47, 0.35, 0.18))
 
         # eden rendering info
         curr_iter_eden = 0
         eden_iter_block = 10
         eden_rendering_done = False
 
+        # create starter metaball object for EDEN
+        eden_metamesh_datablock2 = self.create_metamesh_object(n_objects=1,
+                                                              scene=scene,
+                                                              data_block_name="MetaEdenB",
+                                                              object_name="MetaEdenB",
+                                                              rgb=(0.40, 0.25, 0.1))
+
+        # eden rendering info
+        curr_iter_eden2 = 0
+        eden_iter_block2 = 5
+        eden_rendering_done2 = False
+
         # create metaball for sca 1
-        sca_layer_1_metamesh = self.create_metamesh_object(len(self.sca_layer_1),
-                                                                scene,
-                                                                "MetaSCAB",
-                                                                "MetaSCAB",
-                                                                (0.8, 0.7, 0.5))
+        sca_layer_1_metamesh = self.create_metamesh_object(n_objects=len(self.sca_layer_1),
+                                                                scene=scene,
+                                                                data_block_name="MetaSCAB",
+                                                                object_name="MetaSCAB",
+                                                                rgb=(0.53, 0.36, 0.12))
 
         # rendering info for sca 1
         curr_iter_sca_l1 = 0
@@ -174,11 +195,11 @@ class eden_sca:
         sca_rendering_done_l1 = False
 
         # create metaball for sca 2
-        sca_layer_2_metamesh = self.create_metamesh_object(len(self.sca_layer_2),
-                                                                scene,
-                                                                "MetaSCAC",
-                                                                "MetaSCAC",
-                                                                 (0.7, 0.6, 0.4))
+        sca_layer_2_metamesh = self.create_metamesh_object(n_objects=len(self.sca_layer_2),
+                                                                scene=scene,
+                                                                data_block_name="MetaSCAC",
+                                                                object_name="MetaSCAC",
+                                                                rgb=(0.56, 0.37, 0.07))
 
         # rendering info for sca 2
         curr_iter_sca_l2 = 0
@@ -186,11 +207,11 @@ class eden_sca:
         sca_rendering_done_l2 = False 
 
         # create metaball for sca 3
-        sca_layer_3_metamesh = self.create_metamesh_object(len(self.sca_layer_3),
-                                                                scene,
-                                                                "MetaSCAD",
-                                                                "MetaSCAD",
-                                                                 (0.8, 0.5, 0.6))
+        sca_layer_3_metamesh = self.create_metamesh_object(n_objects=len(self.sca_layer_3),
+                                                                scene=scene,
+                                                                data_block_name="MetaSCAD",
+                                                                object_name="MetaSCAD",
+                                                                 rgb=(0.57, 0.37, 0.06))
 
         # rendering info for sca 3
         curr_iter_sca_l3 = 0
@@ -207,22 +228,22 @@ class eden_sca:
         # while everything is not displayed
         while True:
 
-            # EDEN MESH ITERATION
-            if curr_iter_eden + eden_iter_block < len(self.eden.populated_all):
-                self.show_eden_iter(eden_metamesh_datablock, 1.5, curr_iter_eden, curr_iter_eden + eden_iter_block)
+            curr_iter_eden, eden_rendering_done = self.eden_iter(eden_layer=self.eden,
+                                                                eden_metamesh_datablock=eden_metamesh_datablock,
+                                                                curr_iter_eden=curr_iter_eden,
+                                                                eden_iter_block=eden_iter_block,
+                                                                eden_rendering_done=eden_rendering_done)
 
-            elif len(self.eden.populated_all) - curr_iter_eden > 0:
-                # flush the last iterations
-                till_end = len(self.eden.populated_all) - curr_iter_eden
-                self.show_eden_iter(eden_metamesh_datablock, 1.5, curr_iter_eden, curr_iter_eden + till_end-1)
-
-            else:
-                eden_rendering_done = True
-
-            curr_iter_eden += eden_iter_block
+            if curr_iter_eden > 350:
+                curr_iter_eden2, eden_rendering_done2 = self.eden_iter(eden_layer=self.eden2,
+                                                                    eden_metamesh_datablock=eden_metamesh_datablock2,
+                                                                    curr_iter_eden=curr_iter_eden2,
+                                                                    eden_iter_block=eden_iter_block2,
+                                                                    eden_rendering_done=eden_rendering_done2,
+                                                                    height=0.5)
 
             # display sca layer 1
-            if curr_iter_eden >= 100:
+            if curr_iter_eden >= 400:
 
                 curr_iter_sca_l1, sca_rendering_cnt_l1, sca_rendering_done_l1 = self.sca_iter(self.sca_layer_1, 
                                                                                             sca_layer_1_metamesh, 
@@ -230,7 +251,7 @@ class eden_sca:
                                                                                             sca_rendering_cnt_l1, 
                                                                                             sca_rendering_done_l1)
             # display sca layer 2
-            if curr_iter_eden >= 500:
+            if curr_iter_eden >= 700:
 
                 curr_iter_sca_l2, sca_rendering_cnt_l2, sca_rendering_done_l2 = self.sca_iter(self.sca_layer_2, 
                                                                                             sca_layer_2_metamesh, 
@@ -239,7 +260,7 @@ class eden_sca:
                                                                                             sca_rendering_done_l2)
     
             # display sca layer 3
-            if curr_iter_eden >= 1000:
+            if curr_iter_eden >= 1300:
 
                 curr_iter_sca_l3, sca_rendering_cnt_l3, sca_rendering_done_l3 = self.sca_iter(self.sca_layer_3, 
                                                                                             sca_layer_3_metamesh, 
@@ -255,7 +276,7 @@ class eden_sca:
             curr_iter += 1
 
             # if all displayed and rendered: exit
-            if sca_rendering_done_l1 and sca_rendering_done_l2 and sca_rendering_done_l3 and eden_rendering_done:
+            if sca_rendering_done_l1 and sca_rendering_done_l2 and sca_rendering_done_l3 and eden_rendering_done and eden_rendering_done2:
                 break
 
     """ ******************************************************************
@@ -294,9 +315,52 @@ class eden_sca:
 
     """ ******************************************************************
     PUBLIC HELPER FUNCTION
+    For specific eden layer, display one iteration of growth 
+    ****************************************************************** """
+    def eden_iter(self,
+                  eden_layer,
+                  eden_metamesh_datablock,
+                  curr_iter_eden,
+                  eden_iter_block,
+                  eden_rendering_done,
+                  height=0
+                  ):
+
+        # EDEN MESH ITERATION
+        if curr_iter_eden + eden_iter_block < len(eden_layer.populated_all):
+            self.show_eden_iter(eden_metamesh_datablock, 
+                                1.5, 
+                                curr_iter_eden, 
+                                curr_iter_eden + eden_iter_block,
+                                height)
+
+        elif len(eden_layer.populated_all) - curr_iter_eden > 0:
+            # flush the last iterations
+            till_end = len(eden_layer.populated_all) - curr_iter_eden
+            self.show_eden_iter(eden_metamesh_datablock, 
+                                1.5, 
+                                curr_iter_eden, 
+                                curr_iter_eden + till_end-1,
+                                height)
+
+        else:
+            eden_rendering_done = True
+
+        curr_iter_eden += eden_iter_block
+
+        return curr_iter_eden, eden_rendering_done
+
+
+    """ ******************************************************************
+    PUBLIC HELPER FUNCTION
     For specific sca layer, display one iteration of growth for every sca object
     ****************************************************************** """
-    def sca_iter(self, sca_layer, sca_layer_metamesh, curr_iter_sca, sca_rendering_cnt, sca_rendering_done):
+    def sca_iter(self, 
+                sca_layer, 
+                sca_layer_metamesh, 
+                curr_iter_sca, 
+                sca_rendering_cnt, 
+                sca_rendering_done):
 
         # SCA LAYER MESH ITERATION
         for i in range(len(sca_layer)):
@@ -352,7 +416,7 @@ class eden_sca:
     using blender mesh display growth for specific iteration
     NOTE: populated_all contains all populated cells in order they were populated
     **************************************************************************** """
-    def show_eden_iter(self, metamesh, radius, start_idx, end_idx):
+    def show_eden_iter(self, metamesh, radius, start_idx, end_idx, height=0):
 
         print(start_idx, end_idx)
 
@@ -361,7 +425,9 @@ class eden_sca:
 
             # move metaball in direction of new cell
             element = metamesh.elements.new()
-            element.co = self.eden.mapper[(cell[0], cell[1])]
+            loc = self.eden.mapper[(cell[0], cell[1])]
+            loc = (loc[0], loc[1], height)
+            element.co = loc
             element.radius = radius
 
 
@@ -377,7 +443,7 @@ def main():
     scene = bpy.context.scene
 
     # create lamp datablock
-    lamp_data = bpy.data.lamps.new(name='biolampa', type='AREA')
+    lamp_data = bpy.data.lamps.new(name='biolampa', type='POINT')
 
     # create object with lamp datablock
     lamp_obj = bpy.data.objects.new(name='biolampa', object_data=lamp_data)
@@ -387,7 +453,7 @@ def main():
 
     # cofigure position of lamp
     lamp_obj.location = (10,10,10)
-    bpy.data.lamps['biolampa'].energy = 0.1
+    bpy.data.lamps['biolampa'].energy = 10
     bpy.data.lamps['biolampa'].distance = 25
     #bpy.data.lamps['biolampa'].gamma = 0.9
     
@@ -398,12 +464,14 @@ def main():
     # eden sca configuration    
     plate_size = [500,500]
     eden_n_iter = 2200
+    eden2_n_iter = 800
     eden_starter = [250,250]
-    render_path = '/home/lovro/Documents/FER/diplomski/Growth_models/blender_implementations/eden_sca/common_out'
+    render_path = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_sca/temp_res'
     render_checkpoint = 5
 
     es = eden_sca(plate_size = plate_size,
                 eden_n_iter = eden_n_iter,
+                eden2_n_iter = eden2_n_iter,
                 eden_starter = eden_starter,
                 render_path = render_path,
                 render_checkpoint = render_checkpoint)
