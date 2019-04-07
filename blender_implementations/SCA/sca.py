@@ -86,9 +86,9 @@ class Branch():
 
         bpy.ops.mesh.primitive_cylinder_add(radius=thickness,
                                             depth=dist,
-                                            location=(dx/2 + self.position[0],
-                                                      dy/2 + self.position[1],
-                                                      dz/2 + self.position[2]))
+                                            location=(dx + self.position[0],
+                                                      dy + self.position[1],
+                                                      dz + self.position[2]))
         
         phi = math.atan2(dy, dx)
         theta = math.acos(dz/dist)
@@ -297,10 +297,10 @@ class Tree():
             sample += 1
 
             # add metamesh object in branch direction
-            branch.show(mball, 1)
+            #branch.show(mball, 1)
 
             # add cylinder in branch direction
-            #branch.show_tubular(0.1)
+            branch.show_tubular(0.1)
 
             # render
             if sample % iter_render == 0:
@@ -332,7 +332,7 @@ def main():
 
     # render info
     cnt = [0]
-    render_path = '/home/lovro/Documents/FER/diplomski/Growth_models/blender_implementations/SCA/izlazi_sca'
+    render_path = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/sca/temp'
 
     # first tree
     tree1 = Tree(100, [-10,-10,-10], 10, 2, 70, 5)
