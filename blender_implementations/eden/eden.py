@@ -34,11 +34,13 @@ class EDEN:
 
         # Additional variables: plate and populated list
         self.plate = np.zeros(self.plate_size)
-        self.populated = []
         self.plate[self.starter[0]][self.starter[1]] = 1
+
+        self.populated = []
         self.populated.append([self.starter[0], self.starter[1]])
 
         # Additional variables: mapping to blender
+        # NOTE: different mapping!
         self.blender_starter = [-self.starter[0], -self.starter[1]]
         self.mapper = {}
         for i in range(self.plate_size[0]):
@@ -153,20 +155,17 @@ MAIN
 def main():
     
     # configure camera position and orientation
-    bpy.data.objects["Camera"].location[0] = 0
-    bpy.data.objects["Camera"].location[1] = 0
-    bpy.data.objects["Camera"].location[2] = 100
-    bpy.data.objects["Camera"].rotation_euler[0] = 0
-    bpy.data.objects["Camera"].rotation_euler[1] = 0
-    bpy.data.objects["Camera"].rotation_euler[2] = 0
+    bpy.data.objects["Camera"].location = (0, 0, 100)
+    bpy.data.objects["Camera"].rotation_euler = (0,0,0)
 
-    # render info
-    render_iter = 50
-    render_path = '/home/lovro/Documents/FER/diplomski/Growth_models/blender_implementations/eden/izlazi_eden'
-    
     # configure eden growth, grow and render
-    eden = EDEN([100,100], 500, [50,50])
-    eden.grow_pattern(render_iter, render_path)
+    eden = EDEN(plate_size=[1000,1000], 
+                n_iter=5000, 
+                starter=[500,500])
+
+
+    eden.grow_pattern(render_iter=50, 
+                     render_path='/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden/tmp')
 
 """ ************************************************************************************** 
 ROOT
