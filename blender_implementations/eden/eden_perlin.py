@@ -3,117 +3,104 @@ import numpy as np
 import bpy
 import bmesh
 
-def perlin_circle(bm):
+def perlin_circle(bm, param):
     
-    n_segments = 200
-    
-    xoff_lower = 0
-    xoff_upper = 3.4
-    
-    yoff_lower = 0
-    yoff_upper = 3.2
-    zoff = 13.2
-    z = 1
-    
-    radius_lower = 10
-    radius_upper = 12
-    
-    circle_segments = np.linspace(0, 2*np.pi, n_segments)
-    
-    curr_iter  = 0
+    circle_segments = np.linspace(0, 2*np.pi, param["n_segments"])
 
     for segment in circle_segments:
         
-        print("segment", segment)
-
-        xoff = (np.cos(segment)+1) * (xoff_upper + 1 - xoff_lower) + xoff_lower
-        yoff = (np.sin(segment)+1) * (yoff_upper + 1 - yoff_lower) + yoff_lower
+        xoff = np.interp(np.cos(segment), [-1,1], param["xoff"])
+        yoff = np.interp(np.sin(segment), [-1,1], param["yoff"])
+        zoff = param["zoff"]
 
         pos = np.array([xoff, yoff, zoff])
-        print("perlin argument:", pos)
         
         # ZANIMLJIVO: ako ne koristis mapiranje na [50,100] dobivas latice!
-        radius = noise.noise(pos) * (radius_upper - radius_lower+1) + radius_lower
-        print("perlin vrijednost", radius)
+        radius = noise.noise(pos) * (param["radius"][1] - param["radius"][0]+1) + param["radius"][0]
+        #radius = np.interp(noise.noise(pos), [0,1], param["radius"])
         
         x = radius * np.cos(segment)
         y = radius * np.sin(segment)
 
         bm.verts.new(np.array([x,y,0]))
 
-        """
-        #bpy.ops.mesh.primitive_cube_add(radius=0.5, location=(x,y,z))
-        element = meatmesh_datablock.elements.new(type='BALL')
-        element.co = (x,y,z)
-        element.radius = 1
-        """
+
+def grow(layer_name, params):
+
+    scene = bpy.context.scene
+
+    # get layer object mesh
+    eden_layer_mesh_object = bpy.data.objects[layer_name]
+
+    # get layer data mesh
+    eden_layer_mesh_data = eden_layer_mesh_object.data
+
+    # loop with different perlin circle parameters
+    for param in params:
+
+        # create new bmesh
+        bm = bmesh.new()
+
+        # add vertices to bm mesh according to perlin circle vertices generation
+        perlin_circle(bm, param)
+
+        # make the bmesh the object's mesh
+        # transfer bmesh data do mesh data which is connected to empty mesh object
+        bm.to_mesh(eden_layer_mesh_data)
+
+        # add faces/edges
+        # make mesh object active
         
-        if curr_iter % 10 == 0:
-            bpy.context.scene.render.filepath = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_perlin/' + str(curr_iter)
-            #bpy.ops.render.render(write_still=True)
-            
-        curr_iter += 1
+        scene.objects.active = eden_layer_mesh_object
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_mode(type='VERT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.edge_face_add()
+        bpy.ops.object.mode_set(mode='OBJECT')
 
+        # render
+        bpy.context.scene.render.filepath = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_perlin/tmp/' + str(param["step"])
+        bpy.ops.render.render(write_still=True)
 
+        # free when finished
+        bm.free()
+
+def generate_params():
+
+    params = [
+            {"n_segments":200, "xoff":[0,0.3], "yoff":[0,0.3], "zoff":13.2, "radius":[1,3], "step":1},
+            {"n_segments":200, "xoff":[0,2], "yoff":[0,2], "zoff":14.3, "radius":[3,7], "step":2},
+            {"n_segments":200, "xoff":[0,4.1], "yoff":[0,4.1], "zoff":10.2, "radius":[7,10], "step":3},
+            {"n_segments":200, "xoff":[0,7], "yoff":[0,7], "zoff":18.2, "radius":[10,13], "step":4},
+                ]
+
+    return params
 
 def main():    
-
-    # configure camera position and orientation
-    bpy.data.objects["Camera"].location = (0, 0, 100)
-    bpy.data.objects["Camera"].rotation_euler = (0,0,0)
 
     # get scene
     scene = bpy.context.scene
 
-    """
-    "METAMESH"
-    # create datablock
-    meatmesh_datablock = bpy.data.metaballs.new("data_block_name")
-    # create object
-    metamesh_obj = bpy.data.objects.new("object_name", meatmesh_datablock)
-    # add material
-    material = bpy.data.materials.new(name="Material_"+"data_block_name")
-    metamesh_obj.active_material = material
-    # add color
-    metamesh_obj.active_material.diffuse_color = (0.2,0.3,0.4)
-    # link to scene
-    scene.objects.link(metamesh_obj)
-    """
+    # configure camera position and orientation
+    bpy.data.objects["Camera"].location = (0, 0, 50)
+    bpy.data.objects["Camera"].rotation_euler = (0,0,0)
 
+    "prepare mesh data and mesh object that will be used as eden layer"
 
-    "BMESH"
     # add a new mesh data
-    eden_layer_data = bpy.data.meshes.new("mesh")  
-    # add a new object using the mesh data
-    eden_layer_object = bpy.data.objects.new("MyObject", eden_layer_data)  
+    eden_layer_data = bpy.data.meshes.new("eden_layer_A_data")  
 
-    # put the object into the scene (link)
+    # add a new empty mesh object using the mesh data
+    eden_layer_object = bpy.data.objects.new("eden_layer_A_object", eden_layer_data)  
+
+    # put the empty mesh object into the scene (link)
     scene.objects.link(eden_layer_object)  
-    # set as the active object in the scene
-    scene.objects.active = eden_layer_object 
-    # select object
-    eden_layer_object.select = True 
-
-    # select mesh data
-    mesh = bpy.context.object.data
-
-    # create bmesh for adding the vertices
-    bm = bmesh.new()
-
-    perlin_circle(bm)
-
-    # make the bmesh the object's mesh
-    bm.to_mesh(eden_layer_data)
-
-    # add faces/edges
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.select_mode(type='VERT')
-    bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.mesh.edge_face_add()
-    bpy.ops.object.mode_set(mode='OBJECT')
-
-    # free when finished
-    bm.free()
 
 
+    "perform growth"
+    params = generate_params()
+    grow("eden_layer_A_object", params)
+
+
+   
 main()
