@@ -11,15 +11,18 @@ class PerlinCircle:
         CONSTRUCTOR:
         center: np.array([xc, yc, zc])
         radius_range: np.array([lower, upper, step]) -- starting radius, ending radius and step
+        shape: np.array([s_x, s_y]), s_x and s_y are [0,1] and determine circle/elipse shape
         ##################################################################################### """
         def __init__(self,
                      center,
                      radius_range,
+                     shape
                     ):
 
                 # user defined variables
                 self.center = center
                 self.radius_range = radius_range
+                self.shape = shape
 
 
         """ ###################################################################
@@ -47,11 +50,12 @@ class PerlinCircle:
                         noise_val = noise.noise(pos) # NB: noise elem [-1,1]
 
                         # add to radius
-                        radius_curr = param["radius"] + noise_val
+                        radius_curr_x = param["radius_xy"][0] + noise_val
+                        radius_curr_y = param["radius_xy"][1] + noise_val
 
                         # create circle point on nosy radius from center
-                        x = self.center[0] + radius_curr * np.cos(segment)
-                        y = self.center[1] + radius_curr * np.sin(segment)
+                        x = self.center[0] + radius_curr_x * np.cos(segment)
+                        y = self.center[1] + radius_curr_y * np.sin(segment)
                         z = self.center[2]
 
                         # add  point to bmesh
@@ -101,7 +105,9 @@ class PerlinCircle:
                 params = {}
                 
                 # radius
-                params["radius"] = radius
+                radius_x = radius * self.shape[0]
+                radius_y = radius * self.shape[1]
+                params["radius_xy"] = [radius_x, radius_y]
 
                 # n segments scales with radius
                 # https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
@@ -195,7 +201,10 @@ def main():
     # render out
     render_out = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_perlin/tmp/'
 
-    ep = PerlinCircle(center=np.array([0,0,0]), radius_range=np.array([1, 20, 2]))
+    # define and grow
+    ep = PerlinCircle(center=np.array([0,0,0]), 
+                      radius_range=np.array([1, 20, 2]),
+                      shape=np.array([0.1,0.8]))
     ep.render(scene, render_out)
     
 
