@@ -15,9 +15,9 @@ class PerlinCircle:
         def __init__(self,
                      center,
                      radius_range,
-
                     ):
 
+                # user defined variables
                 self.center = center
                 self.radius_range = radius_range
 
@@ -28,7 +28,7 @@ class PerlinCircle:
         ################################################################### """
         def iter_grow(self, param):
 
-                # create empty bmesh
+                # create empty bmesh to store vertices of circle
                 bm = bmesh.new()
         
                 # divide circle in segments
@@ -37,8 +37,8 @@ class PerlinCircle:
                 for segment in circle_segments:
 
                         # generate point on a cricle as argument to perlin noise
-                        xoff = np.interp(np.cos(segment), [-1,1], param["noise_max"])
-                        yoff = np.interp(np.sin(segment), [-1,1], param["noise_max"])
+                        xoff = np.interp(np.cos(segment), [-1,1], param["noise_range"])
+                        yoff = np.interp(np.sin(segment), [-1,1], param["noise_range"])
                         zoff = param["zoff"]
 
                         pos = np.array([xoff, yoff, zoff])
@@ -57,6 +57,22 @@ class PerlinCircle:
                         # add  point to bmesh
                         bm.verts.new(np.array([x,y,z]))
 
+                # add faces and extrude
+                # https://blender.stackexchange.com/questions/65359/how-to-create-and-extrude-a-bmesh-face
+
+                # think of this new vertices as bottom of the extruded shape
+                bottom_face = bm.faces.new(bm.verts)
+
+                # next we create top via extrude operator, note it doesn't move the new face
+                # we make our 1 face into a list so it can be accepted to geom
+                top_face = bmesh.ops.extrude_face_region(bm, geom=[bottom_face])
+
+                # here we move all vertices returned by the previous extrusion
+                # filter the "geom" list for vertices using list constructor
+                bmesh.ops.translate(bm, vec=param["extrude"], verts=[v for v in top_face["geom"] if isinstance(v,bmesh.types.BMVert)])
+
+                bm.normal_update()
+
                 # add a new mesh data
                 layer_mesh_data = bpy.data.meshes.new(param["layer_name"]+"_data")  
 
@@ -68,6 +84,11 @@ class PerlinCircle:
                 bm.to_mesh(layer_mesh_data)
                 bm.free()
 
+                # add color
+                material = bpy.data.materials.new(param["layer_name"]+"_material")
+                material.diffuse_color = param["color"]
+                layer_mesh_object.active_material = material
+
                 # return object, data for object can be extracted via eden_layer_mesh_object.data
                 return layer_mesh_object
 
@@ -75,7 +96,7 @@ class PerlinCircle:
         """ ###################################################################
         configure parameters for current radius
         ################################################################### """
-        def configure_params(self, radius, n_radii):
+        def configure_params(self, radius, n_radii, iter):
 
                 params = {}
                 
@@ -84,7 +105,7 @@ class PerlinCircle:
 
                 # n segments scales with radius
                 # https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
-                err = 0.01
+                err = 0.005
                 th = np.arccos(2 * np.power((1 - err / radius), 2) - 1)
                 params["n_segments"] = np.ceil(2 * np.pi / th)
 
@@ -92,8 +113,17 @@ class PerlinCircle:
                 params["layer_name"] = "layer" + str(radius)
 
                 # noise max for perlin arguments x and y (rule of thumb: 1-10) 
-                params["noise_max"] = [0, np.interp(radius, [0, n_radii], [0, 10])]
-                params["zoff"] = np.pi
+                params["noise_range"] = [0, np.interp(iter, [0, n_radii], [0, 20])]
+                params["zoff"] = np.interp(iter, [0,n_radii], [0.23, 0.48])
+
+                # extrude
+                params["extrude"] = [0,0,np.interp(n_radii-iter, [0,n_radii], [0.01,0.5])]
+
+                # color
+                r = np.interp(iter, [0, n_radii], [0.9,0.99])
+                g = np.interp(iter, [0, n_radii], [0.7,0.87])
+                b = np.interp(iter, [0, n_radii], [0.4,0.7])
+                params["color"] = [r,g,b]
 
                 return params
 
@@ -110,12 +140,15 @@ class PerlinCircle:
 
                 # list of blender meshes that represent circle growth
                 growth_phases = []
+                iter = 0
 
                 # every iteration represents radius
                 for radius in radii:
 
+                        iter += 1
+
                         # configure params
-                        params = self.configure_params(radius, len(radii))
+                        params = self.configure_params(radius, len(radii), iter)
 
                         # run circle generation for curr params and radius
                         growth_phase = self.iter_grow(params)
@@ -138,16 +171,8 @@ class PerlinCircle:
 
                         iter += 1
 
-                        # add object to scene
+                        # add object to scene in
                         scene.objects.link(phase_object)  
-
-                        # add faces/edges (also can randomise vertices a bit)
-                        scene.objects.active = phase_object
-                        bpy.ops.object.mode_set(mode='EDIT')
-                        bpy.ops.mesh.select_mode(type='VERT')
-                        bpy.ops.mesh.select_all(action='SELECT')
-                        bpy.ops.mesh.edge_face_add()
-                        bpy.ops.object.mode_set(mode='OBJECT')
 
                         # render
                         bpy.context.scene.render.filepath = os.path.join(render_out, str(iter))
@@ -180,7 +205,3 @@ root
 ################################################################### """
 main()
 
- 
-"""
-        #ZANIMLJIVO: ako ne koristis mapiranje za noise dobivas latice!
-"""
