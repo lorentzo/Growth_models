@@ -25,14 +25,14 @@ eden = PerlinCircle(center=center,
 eden_layers = eden.grow()
 
 # sca circle layer
-scaCL = SCACircleBrancher(center=center,
+scaCL = SCACircleBrancher(center=[0,0,1],
                           n_sca_trees=10,
                           root_circle_radius=10,
                           leaves_spread=np.array([10,10,0]),
                           n_leaves=20,
                           name='scaCL')
 
-sca_layers = scaCL.configure_sca_forest()
+
 
 # render
 render_out = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_sca_bmesh/tmp/'
@@ -42,21 +42,23 @@ eden_layer_idx = 0
 while True:
 
         iter += 1
-
+        
         eden_layer = eden_layers[eden_layer_idx]
 
         # add object to scene in
         scene.objects.link(eden_layer)  
 
         if eden_layer_idx == 5:
-            for sca_layer in sca_layers:
-                scene.objects.link(sca_layer)
+            sca_layers = scaCL.configure_sca_forest()
 
         # render
         bpy.context.scene.render.filepath = os.path.join(render_out, str(iter))
         bpy.ops.render.render(write_still=True)
 
         eden_layer_idx += 1
+        
+        if eden_layer_idx > len(eden_layers):
+            break
 
 
     

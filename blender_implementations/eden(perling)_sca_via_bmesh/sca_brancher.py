@@ -60,24 +60,42 @@ class SCACircleBrancher:
             # add a new empty mesh object using the mesh data
             sca_object = bpy.data.objects.new(self.name+str(n)+"_object", sca_data) 
             
-            
-
             # make the bmesh the object's mesh
             # transfer bmesh data do mesh data which is connected to empty mesh object
             bm.to_mesh(sca_data)
             bm.free()
-            scene.objects.link(sca_object) 
+            
             # convert mesh to curve and add bevel
-            #bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.data.objects[self.name+str(n)+"_object"].select = True
+            bpy.context.scene.layers[0] = False
+            bpy.context.scene.layers[3] = True
+            """
+            bpy.ops.curve.primitive_nurbs_circle_add(radius=0.04)
+            bevel = bpy.context.object
+            
+            scene.objects.link(sca_object) 
+            sca_object.select = True
             bpy.context.scene.objects.active = sca_object
             bpy.ops.object.convert(target='CURVE')
-            #bpy.context.space_data.context = 'DATA'
-            bpy.context.object.data.fill_mode = 'FULL'
-            bpy.context.object.bevel_depth = 0.04
-            #bpy.data.curves[self.name+str(n)+"_object"].fill_mode = 'FULL'
-            #bpy.data.curves[self.name+str(n)+"_object"].bevel_dept = 0.05
+            sca_object.data.bevel_object = bevel
+            """
 
             sca_forest.append(sca_object)
 
         return sca_forest
+
+
+# sca circle layer
+scaCL = SCACircleBrancher(center=[0,0,0],
+                          n_sca_trees=10,
+                          root_circle_radius=10,
+                          leaves_spread=np.array([10,10,0]),
+                          n_leaves=20,
+                          name='scaCL')
+
+sca_layers = scaCL.configure_sca_forest()
+
+bpy.context.scene.layers[0] = True
+for sca_layer in sca_layers:
+    print(sca_layer)
+    bpy.context.scene.objects.link(sca_layer)
+
