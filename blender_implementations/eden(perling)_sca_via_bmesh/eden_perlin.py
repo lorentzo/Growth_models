@@ -10,7 +10,7 @@ class PerlinCircle:
         """ ####################################################################################
         CONSTRUCTOR:
         center: np.array([xc, yc, zc])
-        radius_range: np.array([lower, upper, step]) -- starting radius, ending radius and step
+        radius_range: np.array([max_radius, steps]) -- max radius, steps between 0 and max radius
         shape: np.array([s_x, s_y]), s_x and s_y are [0,1] and determine circle/elipse shape
         ##################################################################################### """
         def __init__(self,
@@ -142,7 +142,7 @@ class PerlinCircle:
         def grow(self):
 
                 # create list of radii: starting_radius, ending radius, step
-                radii = list(range(self.radius_range[0], self.radius_range[1], self.radius_range[2]))
+                radii = np.linspace(0.1, self.radius_range[0], self.radius_range[1])
 
                 # list of blender meshes that represent circle growth
                 growth_phases = []

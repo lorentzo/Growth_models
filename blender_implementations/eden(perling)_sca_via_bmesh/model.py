@@ -19,7 +19,7 @@ center = np.array([0,0,0])
 
 # eden layer
 eden = PerlinCircle(center=center,
-                    radius_range=np.array([1,20,2]),
+                    radius_range=np.array([20,20]),
                     shape=np.array([1,1]))
 
 eden_layers = eden.grow()
@@ -35,36 +35,49 @@ scaCL1 = SCACircleBrancher(center=[0,0,0.3],
                           leaves_spread=np.array([3,3,1]),
                           n_leaves=15,
                           branch_thickness_max=0.1,
-                          name='scaCL')
+                          name='scaCLA')
 
 scaCL1.initialize_sca_forest(scene)
 sca_layers[scaCL1_radius] = scaCL1
 
-# sca circle layer 2
-scaCL2_radius = 10
+# sca layer 2
+scaCL2_radius = 6
 scaCL2 = SCACircleBrancher(center=[0,0,0.3],
-                          n_sca_trees=15,
+                          n_sca_trees=10,
                           root_circle_radius=scaCL2_radius,
-                          leaves_spread=np.array([8,8,1]),
-                          n_leaves=20,
-                          branch_thickness_max=0.2,
-                          name='scaCLA')
+                          leaves_spread=np.array([5,5,1]),
+                          n_leaves=15,
+                          branch_thickness_max=0.1,
+                          name='scaCLB')
 
 scaCL2.initialize_sca_forest(scene)
 sca_layers[scaCL2_radius] = scaCL2
 
-# sca circle layer 2
-scaCL3_radius = 15
-scaCL3 = SCACircleBrancher(center=[0,0,0.2],
-                          n_sca_trees=25,
+# sca circle layer 3
+scaCL3_radius = 10
+scaCL3 = SCACircleBrancher(center=[0,0,0.3],
+                          n_sca_trees=15,
                           root_circle_radius=scaCL3_radius,
-                          leaves_spread=np.array([15,15,1]),
+                          leaves_spread=np.array([8,8,1]),
                           n_leaves=20,
-                          branch_thickness_max=0.25,
-                          name='scaCLA')
+                          branch_thickness_max=0.15,
+                          name='scaCLC')
 
 scaCL3.initialize_sca_forest(scene)
 sca_layers[scaCL3_radius] = scaCL3
+
+# sca circle layer 4
+scaCL4_radius = 15
+scaCL4 = SCACircleBrancher(center=[0,0,0.2],
+                          n_sca_trees=25,
+                          root_circle_radius=scaCL4_radius,
+                          leaves_spread=np.array([15,15,1]),
+                          n_leaves=20,
+                          branch_thickness_max=0.20,
+                          name='scaCLD')
+
+scaCL4.initialize_sca_forest(scene)
+sca_layers[scaCL4_radius] = scaCL4
 
 # render
 render_out = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_sca_bmesh/tmp/'
