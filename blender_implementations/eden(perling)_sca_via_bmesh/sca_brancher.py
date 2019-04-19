@@ -2,7 +2,7 @@ import bpy
 import numpy as np
 import bmesh
 from sca import SCA
-
+import os
 class SCACircleBrancher:
 
     def __init__(self,
@@ -11,8 +11,10 @@ class SCACircleBrancher:
                  root_circle_radius,
                  leaves_spread,
                  n_leaves,
+                 branch_thickness_max,
                  name):
 
+        # user defined
         self.center = center
         self.n_sca_trees = n_sca_trees
         self.root_circle_radius = root_circle_radius
@@ -20,12 +22,28 @@ class SCACircleBrancher:
         self.n_leaves = n_leaves
         self.name = name
 
-    
-    def configure_sca_forest(self):
+        # additional
+        self.sca_forest = []
+        self.bevel_radius = 0
+        self.bevel_radius_delta = 0.01
+        self.bevel_radius_max = branch_thickness_max
+        self.bevel_object = None
 
-        sca_forest = []
+    """ #########################################################################
+    Configure set of sca objects 
+    grow configured set of sca objects
+    create curve from mesh from bmesh of sca objects and add to scene
+    Created curves will be invisible to render so increase volume during iterations 
+        to make them appear
+    ######################################################################### """
+    def initialize_sca_forest(self, scene):
+
         segment = 2 * np.pi / self.n_sca_trees
-        scene = bpy.context.scene
+
+        # create bevel object for volume (ini: 0 volume)
+        bpy.ops.curve.primitive_nurbs_circle_add()
+        bpy.context.object.scale = (0,0,0)
+        self.bevel_object = bpy.context.object
 
         for n in range(self.n_sca_trees):
 
@@ -44,7 +62,6 @@ class SCACircleBrancher:
             sca.grow()
 
             # create mesh
-            
             bm = bmesh.new()
 
             for branch in sca.branches:
@@ -65,25 +82,36 @@ class SCACircleBrancher:
             bm.to_mesh(sca_data)
             bm.free()
             
-            # convert mesh to curve and add bevel
-            bpy.context.scene.layers[0] = False
-            bpy.context.scene.layers[3] = True
-            """
-            bpy.ops.curve.primitive_nurbs_circle_add(radius=0.04)
-            bevel = bpy.context.object
-            
+            # add sca object to scene, convert to curve, add bevel
             scene.objects.link(sca_object) 
             sca_object.select = True
             bpy.context.scene.objects.active = sca_object
             bpy.ops.object.convert(target='CURVE')
-            sca_object.data.bevel_object = bevel
-            """
+            sca_object.data.bevel_object = self.bevel_object
 
-            sca_forest.append(sca_object)
-
-        return sca_forest
+            # store sca_objects
+            self.sca_forest.append(sca_object)
 
 
+    def emerge_sca_volume(self):
+
+        new_radius = self.bevel_object.scale[0] + self.bevel_radius_delta
+        print(new_radius,self.bevel_radius_max)
+
+        if new_radius < self.bevel_radius_max:
+
+            self.bevel_object.scale = (new_radius, new_radius, new_radius)
+
+            return False # not finished
+
+        else:
+
+            return True # finished
+
+
+
+
+"""
 # sca circle layer
 scaCL = SCACircleBrancher(center=[0,0,0],
                           n_sca_trees=10,
@@ -94,8 +122,33 @@ scaCL = SCACircleBrancher(center=[0,0,0],
 
 sca_layers = scaCL.configure_sca_forest()
 
-bpy.context.scene.layers[0] = True
+# link to the scene and add builder modifier
 for sca_layer in sca_layers:
     print(sca_layer)
     bpy.context.scene.objects.link(sca_layer)
+    sca_layer.select = True
+    bpy.context.scene.objects.active = sca_layer
+    bpy.ops.object.modifier_add(type='BUILD')
+    bpy.context.object.modifiers['Build'].frame_duration=10
+    bpy.context.object.modifiers['Build'].frame_start=0
+
+
+frame = 0
+render_out = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_sca_bmesh/tmp/'
+while True:
+    if frame < -10:
+            break
+    for sca_layer in sca_layers:
+        sca_layer.select = True
+        bpy.context.scene.objects.active = sca_layer
+        bpy.context.object.modifiers['Build'].frame_start = frame
+
+    frame -= 0.5
+
+    # render
+    bpy.context.scene.render.filepath = os.path.join(render_out, str(frame))
+    bpy.ops.render.render(write_still=True)
+        
+"""
+
 

@@ -3,7 +3,7 @@ import numpy as np
 from mathutils import noise
 
 # add plane mesh
-bpy.ops.mesh.primitive_cube_add()
+bpy.ops.mesh.primitive_plane_add()
 plane = bpy.context.object
 plane.name = 'air_plane'
 
@@ -24,5 +24,5 @@ bpy.ops.object.mode_set(mode='OBJECT') # pazi!!
 verts = plane.data.vertices
 print("N", len(verts))
 for v in verts:
-    v.co[1] = noise.noise(v.co)
+    v.co[2] = noise.noise(v.co)
 

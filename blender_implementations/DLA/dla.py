@@ -13,11 +13,11 @@ class Walker:
     def __init__(self, 
                 center_spawn_circle,
                 r_spawn_circle, 
-                r_walk):
+                r_walk_dist):
 
         self.center_spawn_circle = center_spawn_circle
         self.r_spawn_circle = r_spawn_circle
-        self.r_walk = r_walk
+        self.r_walk_dist = r_walk_dist
 
         self.position = self.__init_position__()
         self.found = False
@@ -37,8 +37,8 @@ class Walker:
 
     def walk(self):
 
-        x = self.position[0] + self.r_walk * np.sin(np.random.rand() * 2 * np.pi)
-        y = self.position[1] + self.r_walk * np.cos(np.random.rand() * 2 * np.pi)
+        x = self.position[0] + self.r_walk_dist * np.sin(np.random.rand() * 2 * np.pi)
+        y = self.position[1] + self.r_walk_dist * np.cos(np.random.rand() * 2 * np.pi)
         z = 0
 
         self.position = np.array([x,y,z])
@@ -94,6 +94,7 @@ class Tree:
 
         walkers = []
 
+        # initialise walkers
         for i in range(0, self.n_walkers):
 
             walker = Walker(self.center,
@@ -102,17 +103,21 @@ class Tree:
 
             walkers.append(walker)
 
+        # perform random walk for every walker until stuck
         while walkers_stuck < self.n_walkers:
 
+            # for every walker
             for walker in walkers:
 
+                # check if current walker is stuck
                 if not walker.found:
 
+                    # if not stuck perform random movement and check distance  
                     for walker_tree in self.tree:
 
                         dist = np.linalg.norm(walker.position - walker_tree.position)
 
-                        if dist < self.stick_dist:
+                        if dist <= self.stick_dist:
 
                             self.tree.append(walker)
                             walkers_stuck += 1
@@ -135,8 +140,8 @@ def main():
     tree = Tree(radius_spawn=100, 
                 radius_stick=10, 
                 center=np.array([0,0,0]), 
-                stick_dist=6, 
-                n_walkers=900, 
+                stick_dist=1.5, 
+                n_walkers=100, 
                 walker_walk_dist=1)
     tree.grow()
 
@@ -160,8 +165,8 @@ def main():
     radius = 2
     shrink = 0.9995
 
-    bpy.ops.object.metaball_add(type='BALL', location=np.array([0,0,0]), radius=radius)
-    obj = bpy.context.active_object.data
+    # create texture 
+    texture = bpy.data.textures.new('diplace_tex', type='VORONOI')
 
     for element in tree.tree:
 
@@ -170,12 +175,13 @@ def main():
         #bm.verts.new(element_pos)
         bpy.ops.mesh.primitive_uv_sphere_add(location=element_pos,
                                             size=radius)
+        bpy.context.object.scale = (0.5,0.5,0.5)
 
-        # move metaball in direction of new cell
-        #element = obj.elements.new()
-        #element.co = element_pos
-        #element.radius = radius
+        bpy.ops.object.modifier_add(type='DISPLACE')
+        
+        bpy.context.object.modifiers["Displace"].texture = bpy.data.textures["diplace_tex"]
 
+     
         radius *= shrink
 
     # make mesh from b mesh

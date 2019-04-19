@@ -160,7 +160,7 @@ class PerlinCircle:
                         growth_phase = self.iter_grow(params)
 
                         # save
-                        growth_phases.append(growth_phase)
+                        growth_phases.append((radius, growth_phase))
 
                 return growth_phases
 
