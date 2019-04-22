@@ -12,7 +12,8 @@ class SCACircleBrancher:
                  leaves_spread,
                  n_leaves,
                  branch_thickness_max,
-                 name):
+                 name,
+                 color):
 
         # user defined
         self.center = center
@@ -21,6 +22,7 @@ class SCACircleBrancher:
         self.leaves_spread = leaves_spread
         self.n_leaves = n_leaves
         self.name = name
+        self.color = color
 
         # additional
         self.sca_forest = []
@@ -88,6 +90,12 @@ class SCACircleBrancher:
             bpy.context.scene.objects.active = sca_object
             bpy.ops.object.convert(target='CURVE')
             sca_object.data.bevel_object = self.bevel_object
+
+            # add color
+            material = bpy.data.materials.new(self.name+str(n)+"_material")
+            material.diffuse_color = self.color
+            sca_object.active_material = material
+
 
             # store sca_objects
             self.sca_forest.append(sca_object)

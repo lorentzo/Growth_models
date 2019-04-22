@@ -3,10 +3,10 @@ import bmesh
 
 import numpy as np 
 import os
+from colorsys import hsv_to_rgb
 
 from eden_perlin import PerlinCircle
 from sca_brancher import SCACircleBrancher
-
 
 # get scene
 scene = bpy.context.scene
@@ -19,7 +19,7 @@ center = np.array([0,0,0])
 
 # eden layer
 eden = PerlinCircle(center=center,
-                    radius_range=np.array([20,20]),
+                    radius_range=np.array([20,40]),
                     shape=np.array([1,1]))
 
 eden_layers = eden.grow()
@@ -35,7 +35,8 @@ scaCL1 = SCACircleBrancher(center=[0,0,0.3],
                           leaves_spread=np.array([3,3,1]),
                           n_leaves=15,
                           branch_thickness_max=0.1,
-                          name='scaCLA')
+                          name='scaCLA',
+                          color=hsv_to_rgb(15/360.0,27/100.0,80/100.0))
 
 scaCL1.initialize_sca_forest(scene)
 sca_layers[scaCL1_radius] = scaCL1
@@ -48,7 +49,8 @@ scaCL2 = SCACircleBrancher(center=[0,0,0.3],
                           leaves_spread=np.array([5,5,1]),
                           n_leaves=15,
                           branch_thickness_max=0.1,
-                          name='scaCLB')
+                          name='scaCLB',
+                          color=hsv_to_rgb(15/360.0,27/100.0,70/100.0))
 
 scaCL2.initialize_sca_forest(scene)
 sca_layers[scaCL2_radius] = scaCL2
@@ -61,7 +63,8 @@ scaCL3 = SCACircleBrancher(center=[0,0,0.3],
                           leaves_spread=np.array([8,8,1]),
                           n_leaves=20,
                           branch_thickness_max=0.15,
-                          name='scaCLC')
+                          name='scaCLC',
+                          color=hsv_to_rgb(15/360.0,27/100.0,60/100.0))
 
 scaCL3.initialize_sca_forest(scene)
 sca_layers[scaCL3_radius] = scaCL3
@@ -74,7 +77,8 @@ scaCL4 = SCACircleBrancher(center=[0,0,0.2],
                           leaves_spread=np.array([15,15,1]),
                           n_leaves=20,
                           branch_thickness_max=0.20,
-                          name='scaCLD')
+                          name='scaCLD',
+                          color=hsv_to_rgb(15/360.0,27/100.0,50/100.0))
 
 scaCL4.initialize_sca_forest(scene)
 sca_layers[scaCL4_radius] = scaCL4
