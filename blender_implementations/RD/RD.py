@@ -21,6 +21,15 @@ def set_pixel(img, x, y, width, color):
     for i in range(4):
         img.pixels[offset + i] = color[i]
 
+# get pixel
+def get_pixel(img, x, y, width):
+    color = []
+    offset = (x + y * width) * 4
+    for i in range(4):
+        color.append(img.pixels[offset+1])
+    return color
+
+# set pixels in grid
 def set_pixels_by_grid(img, width, grid):
 
     for i in range(len(grid)):
@@ -28,12 +37,7 @@ def set_pixels_by_grid(img, width, grid):
             color = [grid[i][j][0], grid[i][j][1], 0.0, 1.0]
             set_pixel(img, i, j, width, color)
 
-def get_pixel(img, x, y, width):
-    color = []
-    offset = (x + y * width) * 4
-    for i in range(4):
-        color.append(img.pixels[offset+1])
-    return color
+
 
 
 #####################################################
@@ -43,8 +47,7 @@ def get_pixel(img, x, y, width):
 img = bpy.data.images['moja']
 width = img.size[0] # cols
 height = img.size[1] # rows
-#pix = [1.0] * (4 * width * height) #RGBA
-#img.pixels = pix
+
 
 #####################################################
 
@@ -78,39 +81,39 @@ for i in range(30, 40):
         grid[i][j][1] = 1.0
 
 # conv
-def laplaceA(x,y,img,width):
+def laplaceA(x,y,grid):
 
     sum = 0
 
-    sum += get_pixel(img, x, y, width)[0] * -1
+    sum += grid[x][y][0] * -1
 
-    sum += get_pixel(img, x-1, y, width)[0] * 0.2
-    sum += get_pixel(img, x, y-1, width)[0] * 0.2
-    sum += get_pixel(img, x+1, y, width)[0] * 0.2
-    sum += get_pixel(img, x, y+1, width)[0] * 0.2
+    sum += grid[x-1, y][0] * 0.2
+    sum += grid[x, y-1][0] * 0.2
+    sum += grid[x+1, y][0] * 0.2
+    sum += grid[x, y+1][0] * 0.2
 
-    sum += get_pixel(img, x+1, y+1, width)[0] * 0.05
-    sum += get_pixel(img, x-1, y-1, width)[0] * 0.05
-    sum += get_pixel(img, x+1, y-1, width)[0] * 0.05
-    sum += get_pixel(img, x-1, y+1, width)[0] * 0.05
+    sum += grid[x+1, y+1][0] * 0.05
+    sum += grid[x-1, y-1][0] * 0.05
+    sum += grid[x+1, y-1][0] * 0.05
+    sum += grid[x-1, y+1][0] * 0.05
 
     return sum
 
-def laplaceB(x,y,img,width):
+def laplaceB(x,y,grid):
 
     sum = 0
 
-    sum += get_pixel(img, x, y, width)[1] * -1
+    sum += grid[x][y][1] * -1
 
-    sum += get_pixel(img, x-1, y, width)[1] * 0.2
-    sum += get_pixel(img, x, y-1, width)[1] * 0.2
-    sum += get_pixel(img, x+1, y, width)[1] * 0.2
-    sum += get_pixel(img, x, y+1, width)[1] * 0.2
+    sum += grid[x-1, y][1] * 0.2
+    sum += grid[x, y-1][1] * 0.2
+    sum += grid[x+1, y][1] * 0.2
+    sum += grid[x, y+1][1] * 0.2
 
-    sum += get_pixel(img, x+1, y+1, width)[1] * 0.05
-    sum += get_pixel(img, x-1, y-1, width)[1] * 0.05
-    sum += get_pixel(img, x+1, y-1, width)[1] * 0.05
-    sum += get_pixel(img, x-1, y+1, width)[1] * 0.05
+    sum += grid[x+1, y+1][1] * 0.05
+    sum += grid[x-1, y-1][1] * 0.05
+    sum += grid[x+1, y-1][1] * 0.05
+    sum += grid[x-1, y+1][1] * 0.05
 
     return sum
 
@@ -126,19 +129,16 @@ for g in range(20):
             a = grid[i][j][0]
             b = grid[i][j][1]
 
-            next_grid[i][j][0] = a + (dA * laplaceA(i,j,img,width) - a * b * b + feed * (1-a) ) 
+            next_grid[i][j][0] = a + (dA * laplaceA(i,j,grid) - a * b * b + feed * (1-a) ) 
 
-            next_grid[i][j][1] = b + (dB * laplaceB(i,j,img,width) + a * b *b - (kill+feed) * b) 
+            next_grid[i][j][1] = b + (dB * laplaceB(i,j,grid) + a * b *b - (kill+feed) * b) 
             
             temp = copy.copy(grid)
             grid = next_grid
             next_grid = grid # not needed?
 
 
-                                        
-    #print("CRTAM")
-    #img = bpy.data.images.new('novo'+str(g), width=128, height=128)
-    # display next_grid: blender texture
-set_pixels_by_grid(img, width, next_grid)
+                             
+    set_pixels_by_grid(img, width, next_grid)
 
     
