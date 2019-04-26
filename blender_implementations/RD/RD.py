@@ -87,7 +87,7 @@ def laplaceA(x,y,img,width):
     sum += get_pixel(img, x-1, y, width)[0] * 0.2
     sum += get_pixel(img, x, y-1, width)[0] * 0.2
     sum += get_pixel(img, x+1, y, width)[0] * 0.2
-    sum += get_pixel(img, x+1, y, width)[0] * 0.2
+    sum += get_pixel(img, x, y+1, width)[0] * 0.2
 
     sum += get_pixel(img, x+1, y+1, width)[0] * 0.05
     sum += get_pixel(img, x-1, y-1, width)[0] * 0.05
@@ -105,7 +105,7 @@ def laplaceB(x,y,img,width):
     sum += get_pixel(img, x-1, y, width)[1] * 0.2
     sum += get_pixel(img, x, y-1, width)[1] * 0.2
     sum += get_pixel(img, x+1, y, width)[1] * 0.2
-    sum += get_pixel(img, x+1, y, width)[1] * 0.2
+    sum += get_pixel(img, x, y+1, width)[1] * 0.2
 
     sum += get_pixel(img, x+1, y+1, width)[1] * 0.05
     sum += get_pixel(img, x-1, y-1, width)[1] * 0.05

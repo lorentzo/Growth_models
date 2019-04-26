@@ -1,12 +1,38 @@
 """
 Inspiration:
-https://www.youtube.com/watch?v=x9j8QsRMPM0
+Given SCA nodes construct b mesh, tranform b mesh to mesh
 """
 
 import bpy
 import numpy as np
 import bmesh
 from sca import SCA
+
+"given two vertices insert additional vertices with noise"
+def insert_helper_nodes(v1, v2, bm):
+    
+    helper_nodes = []
+    n_nodes = 11
+    rand_amplitude = 5
+
+    for t in range(n_nodes+1):
+
+        # interpolate
+        x = (1 - t / n_nodes) * v1.co[0] + (t / n_nodes) * v2.co[0]
+        y = (1 - t / n_nodes) * v1.co[1] + (t / n_nodes) * v2.co[1]
+        z = (1 - t / n_nodes) * v1.co[2] + (t / n_nodes) * v2.co[2]
+
+        # add random noise
+        x += np.random.rand() / rand_amplitude
+        y += np.random.rand() / rand_amplitude
+        z += np.random.rand() / rand_amplitude
+
+        helper_nodes.append(bm.verts.new([x,y,z]))
+
+    return helper_nodes
+
+    
+
 
 sca = SCA(root_position=[0,0,0],
           leaves_cloud_center=[10,10,10],
@@ -23,7 +49,9 @@ for branch in sca.branches:
         continue
     v1 = bm.verts.new(branch.position)
     v2 = bm.verts.new(branch.parent.position)
-    bm.edges.new((v1,v2))
+    refined_nodes = insert_helper_nodes(v1, v2, bm)
+    for i in range(len(refined_nodes)-1):
+        bm.edges.new((refined_nodes[i], refined_nodes[i+1]))
     
 # add a new mesh data
 sca_data = bpy.data.meshes.new("sca_data")  
@@ -44,25 +72,3 @@ scene.objects.link(sca_object)
 
 for leaf in sca.leaves:
     bpy.ops.mesh.primitive_uv_sphere_add(location=leaf.position, size=0.2)
-
-
-"""
-# create plate 
-tree_root = (0.0,0.0,0.0)
-bpy.ops.mesh.primitive_plane_add(location=tree_root)
-plane_obj = bpy.context.object
-plane_obj.name = "tree"
-
-
-# collaps plane into one vertex
-bpy.ops.object.mode_set(mode='EDIT')
-bpy.ops.mesh.merge(type='COLLAPSE')
-
-# start adding
-bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(1,1,1)})
-bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(3,3,3)})
-
-# change origin of adding
-bpy.ops.mesh.select_all(action='DESELECT')
-bpy.ops.object.mode_set(mode='OBJECT')
-"""

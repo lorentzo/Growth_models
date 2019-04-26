@@ -19,7 +19,7 @@ center = np.array([0,0,0])
 
 # eden layer
 eden = PerlinCircle(center=center,
-                    radius_range=np.array([20,40]),
+                    radius_range=np.array([18,40]),
                     shape=np.array([1,1]))
 
 eden_layers = eden.grow()
@@ -32,8 +32,9 @@ scaCL1_radius = 3
 scaCL1 = SCACircleBrancher(center=[0,0,0.3],
                           n_sca_trees=10,
                           root_circle_radius=scaCL1_radius,
+                          leaf_center_radius=scaCL1_radius - 1,
                           leaves_spread=np.array([3,3,1]),
-                          n_leaves=15,
+                          n_leaves=10,
                           branch_thickness_max=0.1,
                           name='scaCLA',
                           color=hsv_to_rgb(15/360.0,27/100.0,80/100.0))
@@ -44,8 +45,9 @@ sca_layers[scaCL1_radius] = scaCL1
 # sca layer 2
 scaCL2_radius = 6
 scaCL2 = SCACircleBrancher(center=[0,0,0.3],
-                          n_sca_trees=10,
+                          n_sca_trees=15,
                           root_circle_radius=scaCL2_radius,
+                          leaf_center_radius=scaCL2_radius - 4,
                           leaves_spread=np.array([5,5,1]),
                           n_leaves=15,
                           branch_thickness_max=0.1,
@@ -58,8 +60,9 @@ sca_layers[scaCL2_radius] = scaCL2
 # sca circle layer 3
 scaCL3_radius = 10
 scaCL3 = SCACircleBrancher(center=[0,0,0.3],
-                          n_sca_trees=15,
+                          n_sca_trees=20,
                           root_circle_radius=scaCL3_radius,
+                          leaf_center_radius=scaCL3_radius - 7,
                           leaves_spread=np.array([8,8,1]),
                           n_leaves=20,
                           branch_thickness_max=0.15,
@@ -74,8 +77,9 @@ scaCL4_radius = 15
 scaCL4 = SCACircleBrancher(center=[0,0,0.2],
                           n_sca_trees=25,
                           root_circle_radius=scaCL4_radius,
+                          leaf_center_radius=scaCL4_radius - 10,
                           leaves_spread=np.array([15,15,1]),
-                          n_leaves=20,
+                          n_leaves=25,
                           branch_thickness_max=0.20,
                           name='scaCLD',
                           color=hsv_to_rgb(15/360.0,27/100.0,50/100.0))

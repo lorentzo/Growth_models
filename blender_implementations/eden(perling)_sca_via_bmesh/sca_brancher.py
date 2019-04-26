@@ -3,12 +3,15 @@ import numpy as np
 import bmesh
 from sca import SCA
 import os
+
+
 class SCACircleBrancher:
 
     def __init__(self,
                  center,
                  n_sca_trees,
                  root_circle_radius,
+                 leaf_center_radius,
                  leaves_spread,
                  n_leaves,
                  branch_thickness_max,
@@ -19,6 +22,7 @@ class SCACircleBrancher:
         self.center = center
         self.n_sca_trees = n_sca_trees
         self.root_circle_radius = root_circle_radius
+        self.leaf_center_radius = leaf_center_radius
         self.leaves_spread = leaves_spread
         self.n_leaves = n_leaves
         self.name = name
@@ -49,16 +53,21 @@ class SCACircleBrancher:
 
         for n in range(self.n_sca_trees):
 
-            # configure sca
-            x = self.center[0] + np.cos(segment * n) * self.root_circle_radius
-            y = self.center[1] + np.sin(segment * n) * self.root_circle_radius
-            z = self.center[2] + 0
+            # configure sca root position
+            xr = self.center[0] + np.cos(segment * n) * self.root_circle_radius
+            yr = self.center[1] + np.sin(segment * n) * self.root_circle_radius
+            zr = self.center[2] + 0
 
-            sca = SCA(root_position=[x,y,z],
-                        leaves_cloud_center=self.center,
+            # configure sca leaf center position
+            xl = self.center[0] + np.cos(segment * n) * self.leaf_center_radius
+            yl = self.center[1] + np.sin(segment * n) * self.leaf_center_radius
+            zl = self.center[2] + 0
+
+            sca = SCA(root_position=[xr,yr,zr],
+                        leaves_cloud_center=[xl, yl, zl],
                         leaves_spread=self.leaves_spread,
                         n_leaves=self.n_leaves,
-                        growth_dist={"min":0.5,"max":4}) # test
+                        growth_dist={"min":0.5,"max":4}) # play with params
 
             # grow
             sca.grow()
@@ -71,7 +80,9 @@ class SCACircleBrancher:
                     continue
                 v1 = bm.verts.new(branch.position)
                 v2 = bm.verts.new(branch.parent.position)
-                bm.edges.new((v1,v2))
+                interpolated = self.interpolate_nodes(v1, v2, 2, 0.5, bm)
+                for i in range(len(interpolated)-1):
+                    bm.edges.new((interpolated[i], interpolated[i+1]))
                 
             # add a new mesh data
             sca_data = bpy.data.meshes.new(self.name+str(n)+"_data")  
@@ -99,6 +110,29 @@ class SCACircleBrancher:
 
             # store sca_objects
             self.sca_forest.append(sca_object)
+            
+        
+        
+    def interpolate_nodes(self, v1, v2, n_nodes, rand_amplitude, bm):
+        
+        helper_nodes = []
+        
+        for t in range(n_nodes+1):
+
+            # interpolate
+            x = (1 - t / n_nodes) * v1.co[0] + (t / n_nodes) * v2.co[0]
+            y = (1 - t / n_nodes) * v1.co[1] + (t / n_nodes) * v2.co[1]
+            z = (1 - t / n_nodes) * v1.co[2] + (t / n_nodes) * v2.co[2]
+
+            # add random noise
+            x += np.random.rand() * rand_amplitude
+            y += np.random.rand() * rand_amplitude
+            #z += np.random.rand() * rand_amplitude
+
+            helper_nodes.append(bm.verts.new([x,y,z]))
+
+        return helper_nodes
+        
 
 
     def emerge_sca_volume(self):
@@ -116,47 +150,5 @@ class SCACircleBrancher:
 
             return True # finished
 
-
-
-
-"""
-# sca circle layer
-scaCL = SCACircleBrancher(center=[0,0,0],
-                          n_sca_trees=10,
-                          root_circle_radius=10,
-                          leaves_spread=np.array([10,10,0]),
-                          n_leaves=20,
-                          name='scaCL')
-
-sca_layers = scaCL.configure_sca_forest()
-
-# link to the scene and add builder modifier
-for sca_layer in sca_layers:
-    print(sca_layer)
-    bpy.context.scene.objects.link(sca_layer)
-    sca_layer.select = True
-    bpy.context.scene.objects.active = sca_layer
-    bpy.ops.object.modifier_add(type='BUILD')
-    bpy.context.object.modifiers['Build'].frame_duration=10
-    bpy.context.object.modifiers['Build'].frame_start=0
-
-
-frame = 0
-render_out = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_sca_bmesh/tmp/'
-while True:
-    if frame < -10:
-            break
-    for sca_layer in sca_layers:
-        sca_layer.select = True
-        bpy.context.scene.objects.active = sca_layer
-        bpy.context.object.modifiers['Build'].frame_start = frame
-
-    frame -= 0.5
-
-    # render
-    bpy.context.scene.render.filepath = os.path.join(render_out, str(frame))
-    bpy.ops.render.render(write_still=True)
-        
-"""
 
 
