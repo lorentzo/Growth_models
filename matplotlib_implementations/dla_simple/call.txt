@@ -1,1 +1,1 @@
-python dla_lattice.py -plate-size 500,500 -starter 250,250 -attractor none -n-iter 1000 -r-spawn 60 -r-kill 80 -r-jump 70 -talk n -checkpoint 100 -out-folder results3000
+python dla_lattice.py -plate-size 500,500 -starter 250,250 -attractor none -n-iter 1000 -r-spawn 60 -r-kill 80 -r-jump 70 -talk n -checkpoint 100 -out-folder /home/lovro/Documents/FER/diplomski/growth_models_results/matplotlib_impl/dla/results_tmp

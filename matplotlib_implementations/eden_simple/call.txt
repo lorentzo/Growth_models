@@ -1,1 +1,2 @@
-python eden_simple.py -plate-size 500,500 -n-iter 2000 -starters 250,250 -talk n -checkpoint 100 -out-folder results
+python eden_simple.py -plate-size 500,500 -n-iter 2000 -starters 250,250 -talk n -checkpoint 100 -out-folder /home/lovro/Documents/FER/diplomski/growth_models_results/matplotlib_impl/eden/results_tmp
+

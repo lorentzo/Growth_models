@@ -48,6 +48,7 @@ class PerlinCircle:
 
                         # generate noise value
                         noise_val = noise.noise(pos) # NB: noise elem [-1,1]
+                        #noise_val = np.random.rand()
 
                         # add to radius
                         radius_curr_x = param["radius_xy"][0] + noise_val
@@ -199,12 +200,12 @@ def main():
     bpy.data.objects["Camera"].rotation_euler = (0,0,0)
 
     # render out
-    render_out = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_perlin/tmp/'
+    render_out = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden/eden_perlin/tmp/'
 
     # define and grow
     ep = PerlinCircle(center=np.array([0,0,0]), 
                       radius_range=np.array([1, 20, 2]),
-                      shape=np.array([0.1,0.8]))
+                      shape=np.array([1,1]))
     ep.render(scene, render_out)
     
 

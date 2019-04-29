@@ -45,9 +45,9 @@ def setup():
         
         
 
-    for x in range(-30 + width/2, width/2 + 30):
-        for y in range(-30 + height/2, height/2 + 30):
-            grid[x][y] = random(0,1)
+    #for x in range(-30 + width/2, width/2 + 30):
+    #    for y in range(-30 + height/2, height/2 + 30):
+    #        grid[x][y] = random(0,1)
 
     
     grid[width/2][height/2] = 1
@@ -80,7 +80,7 @@ def draw():
             
             val = grid[x][y]
             b = grid_b[x][y]
-            b = random(0, 0.2)
+            b = 0
             
             grid_next[x][y] = val + ( dVAL * diffuse(x,y,grid) - b * b * f * (1-val) )
             

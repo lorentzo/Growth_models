@@ -147,7 +147,7 @@ class EDEN:
             # render scene
             if sample % render_iter == 0:
                 bpy.context.scene.render.filepath = os.path.join(render_path,str(sample))
-                #bpy.ops.render.render(write_still=True)
+                bpy.ops.render.render(write_still=True)
 
 """ ************************************************************************************** 
 MAIN
@@ -160,12 +160,12 @@ def main():
 
     # configure eden growth, grow and render
     eden = EDEN(plate_size=[1000,1000], 
-                n_iter=5000, 
+                n_iter=3000, 
                 starter=[500,500])
 
 
     eden.grow_pattern(render_iter=50, 
-                     render_path='/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden/tmp')
+                     render_path='/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden/eden_metaball/tmp')
 
 """ ************************************************************************************** 
 ROOT

@@ -297,16 +297,16 @@ class Tree():
             sample += 1
 
             # add metamesh object in branch direction
-            #branch.show(mball, 1)
+            branch.show(mball, 1)
 
             # add cylinder in branch direction
-            branch.show_tubular(0.1)
+            #branch.show_tubular(0.1)
 
             # render
             if sample % iter_render == 0:
                 cnt[0] += 1
                 bpy.context.scene.render.filepath = os.path.join(render_path, str(cnt[0]))
-                #bpy.ops.render.render(write_still=True)
+                bpy.ops.render.render(write_still=True)
 
     """ *********************************************************************
     PUBLIC HELPER FUNCTION
@@ -332,10 +332,10 @@ def main():
 
     # render info
     cnt = [0]
-    render_path = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/sca/temp'
+    render_path = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/sca/sca_metaball/temp'
 
     # first tree
-    tree1 = Tree(100, [-10,-10,-10], 10, 2, 70, 5)
+    tree1 = Tree(100, [50,0,0], 10, 2, 50, 5)
     tree1.show_leaves()
     tree1.grow_to_point_cloud()
     tree1.grow_through_point_cloud()
