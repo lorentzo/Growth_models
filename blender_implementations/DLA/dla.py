@@ -22,6 +22,10 @@ class Walker:
         self.position = self.__init_position__()
         self.found = False
 
+    """
+    Spawn walker on random position on circle defined by center_spawn_circle
+    and r_spawn_circle
+    """
     def __init_position__(self):
 
         density = 100
@@ -35,14 +39,26 @@ class Walker:
 
         return np.array([x,y,z])
 
+    """
+    random movement
+    """
     def walk(self):
 
-        x = self.position[0] + self.r_walk_dist * np.sin(np.random.rand() * 2 * np.pi)
-        y = self.position[1] + self.r_walk_dist * np.cos(np.random.rand() * 2 * np.pi)
+        """
+        from current position move randomly.
+        Next step is random point on circle with current position as
+        center and r_walk_dist as radius
+        """
+        x = self.position[0] + self.r_walk_dist * np.sin(np.random.rand() * np.pi / 2)
+        y = self.position[1] + self.r_walk_dist * np.cos(np.random.rand() * np.pi / 2)
         z = 0
 
         self.position = np.array([x,y,z])
 
+        """
+        if walker goes outside of certain radius, reset its position
+        as random point on starting circle
+        """
         dist = np.linalg.norm(self.center_spawn_circle - self.position)
 
         if dist > self.r_spawn_circle + 10:
@@ -52,7 +68,7 @@ class Tree:
 
     def __init__(self, 
                  radius_spawn,
-                 radius_stick,
+                 ini_radius,
                  center,
                  stick_dist,
                  n_walkers,
@@ -60,20 +76,29 @@ class Tree:
                 ):
 
         self.radius_spawn = radius_spawn
-        self.radius_stick = radius_stick
+        self.ini_radius = ini_radius
         self.center = center
         self.stick_dist = stick_dist
         self.n_walkers = n_walkers
         self.walker_walk_dist = walker_walk_dist
 
+
+        # create initial walker
+        init_walker = Walker(self.center,
+                             self.radius_spawn,
+                             self.walker_walk_dist)
+
+        init_walker.position = [0,0,0]
+
         self.tree = []
+        #self.tree.append([None, init_walker])
         self.__init_tree__()
 
     "define where walkers will be stuck"
     def __init_tree__(self):
 
         sample_density = 20
-        circle_samples = np.linspace(0, 2 * np.pi, sample_density)
+        circle_samples = np.linspace(0, np.pi / 2, sample_density)
 
         # NOTE: use noise so circle is bit wavy
         for circle_sample in circle_samples:
@@ -82,11 +107,11 @@ class Tree:
                                  self.radius_spawn,
                                  self.walker_walk_dist)
 
-            x = self.center[0] + self.radius_stick * np.cos(circle_sample)
-            y = self.center[1] + self.radius_stick * np.sin(circle_sample)
+            x = self.center[0] + self.ini_radius * np.cos(circle_sample)
+            y = self.center[1] + self.ini_radius * np.sin(circle_sample)
             init_walker.position = np.array([x,y,0])
 
-            self.tree.append(init_walker)
+            self.tree.append([None, init_walker])
 
     def grow(self):
 
@@ -115,11 +140,13 @@ class Tree:
                     # if not stuck perform random movement and check distance  
                     for walker_tree in self.tree:
 
-                        dist = np.linalg.norm(walker.position - walker_tree.position)
+                        walker_tree_rel = walker_tree[1]
+
+                        dist = np.linalg.norm(walker.position - walker_tree_rel.position)
 
                         if dist <= self.stick_dist:
-
-                            self.tree.append(walker)
+                            print(dist)
+                            self.tree.append([walker_tree_rel, walker])
                             walkers_stuck += 1
                             print(walkers_stuck)
                             walker.found = True
@@ -137,13 +164,40 @@ class Tree:
 def main():
 
     "define and grow dla tree"
-    tree = Tree(radius_spawn=100, 
-                radius_stick=10, 
+    tree = Tree(radius_spawn=12, 
+                ini_radius=2, 
                 center=np.array([0,0,0]), 
-                stick_dist=1.5, 
-                n_walkers=100, 
-                walker_walk_dist=1)
+                stick_dist=0.5, 
+                n_walkers=150, 
+                walker_walk_dist=0.1)
     tree.grow()
+
+    # create bmesh
+    bm = bmesh.new()
+    for branch in tree.tree:
+        if branch[0] == None:
+            bm.verts.new(branch[1].position)
+            continue
+        v1 = bm.verts.new(branch[0].position)
+        v2 = bm.verts.new(branch[1].position)
+        bm.edges.new((v1, v2))
+
+    # create mesh object using bmesh data
+    mesh_data = bpy.data.meshes.new("dla_mesh_data")
+    mesh_obj = bpy.data.objects.new("dla_mesh_obj", mesh_data)
+    bm.to_mesh(mesh_data)
+    bm.free()
+
+    # add mesh object to the scene
+    scene = bpy.context.scene
+    scene.objects.link(mesh_obj)
+
+        
+
+
+
+
+    """
 
     "use blender to display"
     # mesh data
@@ -188,6 +242,6 @@ def main():
     bm.to_mesh(mesh)   
 
     bm.free() 
-
+    """
 
 main()

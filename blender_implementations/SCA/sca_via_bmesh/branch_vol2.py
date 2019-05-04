@@ -35,8 +35,8 @@ def insert_helper_nodes(v1, v2, bm):
 
 
 sca = SCA(root_position=[0,0,0],
-          leaves_cloud_center=[10,10,10],
-          leaves_spread=[5,5,5],
+          leaves_cloud_center=[0,0,10],
+          leaves_spread=[15,15,15],
           n_leaves=30,
           growth_dist={"min":0.5,"max":4})
 
@@ -49,6 +49,9 @@ for branch in sca.branches:
         continue
     v1 = bm.verts.new(branch.position)
     v2 = bm.verts.new(branch.parent.position)
+    
+    #bm.edges.new((v1, v2))
+    
     refined_nodes = insert_helper_nodes(v1, v2, bm)
     for i in range(len(refined_nodes)-1):
         bm.edges.new((refined_nodes[i], refined_nodes[i+1]))

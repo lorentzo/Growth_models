@@ -271,7 +271,7 @@ class eden_sca:
             # render scene
             if curr_iter % self.render_checkpoint == 0:
                 bpy.context.scene.render.filepath = os.path.join(self.render_path, str(curr_iter))
-                bpy.ops.render.render(write_still=True)
+                #bpy.ops.render.render(write_still=True)
                 
             curr_iter += 1
 
