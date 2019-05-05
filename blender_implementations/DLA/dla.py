@@ -2,7 +2,6 @@ import bpy
 import numpy as np  
 import bmesh
 
-
 class Walker:
 
     """
@@ -29,7 +28,7 @@ class Walker:
     def __init_position__(self):
 
         density = 100
-        samples = np.linspace(0, 2 * np.pi, density)
+        samples = np.linspace(0, np.pi * 2, density)
         random_sample_idx = np.random.randint(0, density, 1)[0]
         random_sample = samples[random_sample_idx]
 
@@ -49,8 +48,8 @@ class Walker:
         Next step is random point on circle with current position as
         center and r_walk_dist as radius
         """
-        x = self.position[0] + self.r_walk_dist * np.sin(np.random.rand() * np.pi / 2)
-        y = self.position[1] + self.r_walk_dist * np.cos(np.random.rand() * np.pi / 2)
+        x = self.position[0] + self.r_walk_dist * np.sin(np.random.rand() * np.pi * 2)
+        y = self.position[1] + self.r_walk_dist * np.cos(np.random.rand() * np.pi * 2)
         z = 0
 
         self.position = np.array([x,y,z])
@@ -98,7 +97,7 @@ class Tree:
     def __init_tree__(self):
 
         sample_density = 20
-        circle_samples = np.linspace(0, np.pi / 2, sample_density)
+        circle_samples = np.linspace(0, np.pi * 2, sample_density)
 
         # NOTE: use noise so circle is bit wavy
         for circle_sample in circle_samples:
@@ -164,12 +163,12 @@ class Tree:
 def main():
 
     "define and grow dla tree"
-    tree = Tree(radius_spawn=12, 
-                ini_radius=2, 
+    tree = Tree(radius_spawn=6, 
+                ini_radius=1, 
                 center=np.array([0,0,0]), 
-                stick_dist=0.5, 
-                n_walkers=150, 
-                walker_walk_dist=0.1)
+                stick_dist=0.3, 
+                n_walkers=100, 
+                walker_walk_dist=0.2)
     tree.grow()
 
     # create bmesh
