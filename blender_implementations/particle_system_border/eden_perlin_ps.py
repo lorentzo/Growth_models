@@ -74,13 +74,13 @@ class PerlinCircle:
 
                 # next we create top via extrude operator, note it doesn't move the new face
                 # we make our 1 face into a list so it can be accepted to geom
-                top_face = bmesh.ops.extrude_face_region(bm, geom=[bottom_face])
+                #top_face = bmesh.ops.extrude_face_region(bm, geom=[bottom_face])
 
                 # here we move all vertices returned by the previous extrusion
                 # filter the "geom" list for vertices using list constructor
-                bmesh.ops.translate(bm, vec=param["extrude"], verts=[v for v in top_face["geom"] if isinstance(v,bmesh.types.BMVert)])
+                #bmesh.ops.translate(bm, vec=param["extrude"], verts=[v for v in top_face["geom"] if isinstance(v,bmesh.types.BMVert)])
 
-                bm.normal_update()
+                #bm.normal_update()
 
                 # add a new mesh data
                 layer_mesh_data = bpy.data.meshes.new(param["layer_name"]+"_data")  
@@ -147,7 +147,7 @@ class PerlinCircle:
         def grow(self):
 
                 # create list of radii: starting_radius, ending radius, step
-                radii = list(range(self.radius_range[0], self.radius_range[1], self.radius_range[2]))
+                radii = np.linspace(self.radius_range[0], self.radius_range[1], self.radius_range[2])
 
                 # list of blender meshes that represent circle growth
                 growth_phases = []

@@ -34,7 +34,7 @@ def define_object(points, name, ps_object):
 
 # define perlin circles
 ep = PerlinCircle(center=np.array([0,0,0]), 
-                    radius_range=np.array([1, 20, 2]),
+                    radius_range=np.array([1, 20, 40]),
                     shape=np.array([1,1]))
     
 perlin_layers, perlin_contour = ep.grow()
