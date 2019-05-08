@@ -14,7 +14,7 @@ bpy.data.objects["Camera"].rotation_euler = (0,0,0)
 
 # perlin(eden) and ps layers
 perlin_ps = EDEN_PERLIN_PS_BORDER(center=[0,0,0],
-                                  radius_range=[0.01,16,20])
+                                  radius_range=[0.01,16,27])
 
 perlin_layers, ps_layers, radii = perlin_ps.give_perlin_ps()
 
@@ -22,14 +22,15 @@ perlin_layers, ps_layers, radii = perlin_ps.give_perlin_ps()
 sca_layers = {}
 
 # sca circle layer 1
-scaCL1_radius = 3
-scaCL1 = SCACircleBrancher(center=[0,0,0.3],
+scaCL1_radius = 2
+scaCL1 = SCACircleBrancher(center=[0,0,0.05],
                           n_sca_trees=10,
                           root_circle_radius=scaCL1_radius,
-                          leaf_center_radius=scaCL1_radius-1,
+                          leaf_center_radius=scaCL1_radius-1.5,
                           leaves_spread=np.array([3,3,1]),
                           n_leaves=10,
                           branch_thickness_max=0.1,
+                          bevel_radius_delta = 0.005,
                           name='scaCLA',
                           color=hsv_to_rgb(15/360.0,27/100.0,80/100.0))
 
@@ -37,14 +38,15 @@ scaCL1.initialize_sca_forest(scene)
 sca_layers[scaCL1_radius] = scaCL1
 
 # sca layer 2
-scaCL2_radius = 6
-scaCL2 = SCACircleBrancher(center=[0,0,0.3],
+scaCL2_radius = 5
+scaCL2 = SCACircleBrancher(center=[0,0,0.05],
                           n_sca_trees=15,
                           root_circle_radius=scaCL2_radius,
-                          leaf_center_radius= scaCL2_radius - 4,
+                          leaf_center_radius= scaCL2_radius - 3,
                           leaves_spread=np.array([5,5,1]),
                           n_leaves=15,
                           branch_thickness_max=0.1,
+                          bevel_radius_delta=0.005,
                           name='scaCLB',
                           color=hsv_to_rgb(15/360.0,27/100.0,70/100.0))
 
@@ -52,14 +54,15 @@ scaCL2.initialize_sca_forest(scene)
 sca_layers[scaCL2_radius] = scaCL2
 
 # sca circle layer 3
-scaCL3_radius = 10
-scaCL3 = SCACircleBrancher(center=[0,0,0.3],
+scaCL3_radius = 9
+scaCL3 = SCACircleBrancher(center=[0,0,0.05],
                           n_sca_trees=20,
                           root_circle_radius=scaCL3_radius,
-                          leaf_center_radius=scaCL3_radius - 7,
+                          leaf_center_radius=scaCL3_radius - 6,
                           leaves_spread=np.array([8,8,1]),
                           n_leaves=20,
                           branch_thickness_max=0.15,
+                          bevel_radius_delta=0.008,
                           name='scaCLC',
                           color=hsv_to_rgb(15/360.0,27/100.0,60/100.0))
 
@@ -67,14 +70,15 @@ scaCL3.initialize_sca_forest(scene)
 sca_layers[scaCL3_radius] = scaCL3
 
 # sca circle layer 4
-scaCL4_radius = 15
-scaCL4 = SCACircleBrancher(center=[0,0,0.2],
+scaCL4_radius = 13
+scaCL4 = SCACircleBrancher(center=[0,0,0.05],
                           n_sca_trees=25,
                           root_circle_radius=scaCL4_radius,
                           leaf_center_radius=scaCL4_radius - 10,
                           leaves_spread=np.array([15,15,1]),
                           n_leaves=25,
                           branch_thickness_max=0.20,
+                          bevel_radius_delta=0.1,
                           name='scaCLD',
                           color=hsv_to_rgb(15/360.0,27/100.0,50/100.0))
 
@@ -108,9 +112,18 @@ while True:
 
     # render ps
     if n_ps_layer < len(ps_layers):
+
+        # get current layer
         ps_layer = ps_layers[n_ps_layer]
-        for i in range(10):
-            ps_layer.particle_systems[0].settings.particle_size += 0.02
+
+        for i in range(5):
+            
+            # grow current layer
+            ps_layer.particle_systems[0].settings.particle_size += 0.04
+
+            for sca_radius, sca_layer in sca_layers.items():
+                if radii[n_perlin_layer] > sca_radius:
+                    sca_layer.emerge_sca_volume()
 
             bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
             bpy.ops.render.render(write_still=True)

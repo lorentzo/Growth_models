@@ -15,6 +15,7 @@ class SCACircleBrancher:
                  leaves_spread,
                  n_leaves,
                  branch_thickness_max,
+                 bevel_radius_delta,
                  name,
                  color):
 
@@ -31,7 +32,7 @@ class SCACircleBrancher:
         # additional
         self.sca_forest = []
         self.bevel_radius = 0
-        self.bevel_radius_delta = 0.01
+        self.bevel_radius_delta = bevel_radius_delta
         self.bevel_radius_max = branch_thickness_max
         self.bevel_object = None
 
