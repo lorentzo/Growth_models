@@ -81,7 +81,7 @@ class SCACircleBrancher:
                     continue
                 v1 = bm.verts.new(branch.position)
                 v2 = bm.verts.new(branch.parent.position)
-                interpolated = self.interpolate_nodes(v1, v2, 2, 0.5, bm)
+                interpolated = self.interpolate_nodes(v1, v2, 4, 0.5, bm)
                 for i in range(len(interpolated)-1):
                     bm.edges.new((interpolated[i], interpolated[i+1]))
                 
