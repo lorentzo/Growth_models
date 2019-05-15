@@ -9,8 +9,13 @@ import bpy
 
 # get scene
 scene = bpy.context.scene
+
+# get and configure camera
 bpy.data.objects["Camera"].location = (0, 0, 50)
 bpy.data.objects["Camera"].rotation_euler = (0,0,0)
+
+# get and configure light
+bpy.data.objects["Lamp"].data.type = 'SUN'
 
 # perlin(eden) and ps layers
 perlin_ps = EDEN_PERLIN_PS_BORDER(center=[0,0,0],
@@ -32,7 +37,7 @@ scaCL1 = SCACircleBrancher(center=[0,0,0.03],
                           branch_thickness_max=0.1,
                           bevel_radius_delta = 0.0012,
                           name='scaCLA',
-                          color=hsv_to_rgb(15/360.0,27/100.0,80/100.0))
+                          color=hsv_to_rgb(30.0/360.0,50.0/100.0,50.0/100.0))
 
 scaCL1.initialize_sca_forest(scene)
 sca_layers[scaCL1_radius] = scaCL1
@@ -48,7 +53,7 @@ scaCL2 = SCACircleBrancher(center=[0,0,0.03],
                           branch_thickness_max=0.1,
                           bevel_radius_delta=0.0015,
                           name='scaCLB',
-                          color=hsv_to_rgb(15/360.0,27/100.0,70/100.0))
+                          color=hsv_to_rgb(30.0/360.0,50.0/100.0,70.0/100.0))
 
 scaCL2.initialize_sca_forest(scene)
 sca_layers[scaCL2_radius] = scaCL2
@@ -64,7 +69,7 @@ scaCL3 = SCACircleBrancher(center=[0,0,0.03],
                           branch_thickness_max=0.12,
                           bevel_radius_delta=0.003,
                           name='scaCLC',
-                          color=hsv_to_rgb(15/360.0,27/100.0,60/100.0))
+                          color=hsv_to_rgb(30.0/360.0,50.0/100.0,60.0/100.0))
 
 scaCL3.initialize_sca_forest(scene)
 sca_layers[scaCL3_radius] = scaCL3
@@ -80,7 +85,7 @@ scaCL4 = SCACircleBrancher(center=[0,0,0.03],
                           branch_thickness_max=0.17,
                           bevel_radius_delta=0.005,
                           name='scaCLD',
-                          color=hsv_to_rgb(15/360.0,27/100.0,50/100.0))
+                          color=hsv_to_rgb(30.0/360.0,50.0/100.0,50.0/100.0))
 
 scaCL4.initialize_sca_forest(scene)
 sca_layers[scaCL4_radius] = scaCL4
@@ -125,9 +130,9 @@ while True:
                 if radii[n_perlin_layer] > sca_radius:
                     sca_layer.emerge_sca_volume()
 
-            bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
-            bpy.ops.render.render(write_still=True)
-            render_iter += 1
+            #bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
+            #bpy.ops.render.render(write_still=True)
+            #render_iter += 1
     else:
         ps_layers_done = True
 
@@ -144,9 +149,9 @@ while True:
     if sca_layers_rendered == len(sca_layers):
         sca_layers_done = True
 
-    bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
-    bpy.ops.render.render(write_still=True)
-    render_iter += 1
+    #bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
+    #bpy.ops.render.render(write_still=True)
+    #render_iter += 1
 
     if perlin_layers_done and ps_layers_done and sca_layers_done:
         break

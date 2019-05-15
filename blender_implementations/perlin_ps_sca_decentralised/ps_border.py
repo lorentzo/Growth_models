@@ -2,6 +2,7 @@ import bpy
 import numpy as np 
 import bmesh
 import os
+from colorsys import hsv_to_rgb
 from eden_perlin_ps import PerlinCircle
 
 class EDEN_PERLIN_PS_BORDER:
@@ -43,13 +44,17 @@ class EDEN_PERLIN_PS_BORDER:
         # create texture for displacement
         bpy.data.textures.new('diplace_tex', type='VORONOI')
         # create sphere
-        bpy.ops.mesh.primitive_uv_sphere_add(location=[10,10,10], size=1)
+        bpy.ops.mesh.primitive_uv_sphere_add(location=[1000,10,10], size=1)
         # add displacement
         bpy.ops.object.modifier_add(type='DISPLACE')
         bpy.context.object.modifiers["Displace"].texture = bpy.data.textures["diplace_tex"]
         # reference dupli object
         dupli_obj = bpy.context.object
         dupli_obj.scale = [2,2,0.1]
+        # add material/color
+        material = bpy.data.materials.new("dupli_material")
+        material.diffuse_color = hsv_to_rgb(30.0/360.0, 80.0/100.0, 80.0/100.0)
+        dupli_obj.active_material = material
 
         return dupli_obj
 
@@ -64,7 +69,7 @@ class EDEN_PERLIN_PS_BORDER:
         perlin_layers, perlin_contour, radii = ep.grow()
 
 
-        # create ps
+        # create object for particle in ps
         dupli_obj = self.create_dupli_obj()
 
         # add ps for every perlin circle
