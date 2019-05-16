@@ -8,6 +8,7 @@ class Particle:
 
         self.position = np.array(position)
         self.size = size
+        self.stuck = False
 
         bpy.ops.mesh.primitive_uv_sphere_add(size=size, location=position)
         self.blender_sphere = bpy.context.object
@@ -17,6 +18,7 @@ class FlowAgg:
 
     """ #####################################################################
         area: {xm:float, xM:float, ym:float, yM:float}
+        area: {xm:float, ym: float, radius:float}
         jump_amp: {x:float, y:float}
     ##################################################################### """
 
@@ -38,12 +40,22 @@ class FlowAgg:
         self.render_out = render_out
 
         self.aggregate = []
-        self.x0 = (area["xM"] - area["xm"]) / 2 + area["xm"]
-        self.y0 = (area["yM"] - area["ym"]) / 2 + area["ym"]
+        self.x0 = area["xm"]
+        self.y0 = area["ym"]
+        #self.x0 = (area["xM"] - area["xm"]) / 2 + area["xm"]
+        #self.y0 = (area["yM"] - area["ym"]) / 2 + area["ym"]
         self.aggregate.append(Particle([self.x0, self.y0, 0], particle_size))
 
 
     def ini_particle(self):
+
+        phi = np.random.rand() * 2 * np.pi
+        x = self.area["radius"] * np.cos(phi)
+        y = self.area["radius"] * np.sin(phi)
+        return Particle([x,y,0], self.particle_size)
+
+
+        """
 
         r = np.random.rand()
 
@@ -67,41 +79,45 @@ class FlowAgg:
             y = np.random.rand() * (self.area["yM"] - self.area["ym"]) + self.area["ym"]
             return Particle([self.area["xM"], y, 0], self.particle_size)
 
+        """
 
-    def move_angle(self, phi_low, phi_high, particle):
+
+    def move_angle(self, phi_low, phi_high, particle, add_amp=1):
 
         phi = np.random.rand() * (phi_high - phi_low) + phi_low
 
         dx = np.cos(phi)
         dy = np.sin(phi)
 
-        particle.position[0] += self.jump_amp["x"] * dx
-        particle.position[1] += self.jump_amp["y"] * dy
+        particle.position[0] += self.jump_amp["x"] * add_amp * dx
+        particle.position[1] += self.jump_amp["y"] * add_amp * dy
 
         particle.blender_sphere.location = particle.position
 
     def move(self, particle):
 
+        # if close to center
+
         # middle bottom
         if particle.position[0] > self.x0 - 1 and particle.position[0] < self.x0 + 1 and particle.position[1] < self.y0:
 
-            self.move_angle(0, np.pi, particle)
+            self.move_angle(np.pi, 3*np.pi/2, particle, 4)
 
         # middle top
         if particle.position[0] > self.x0 - 1 and particle.position[0] < self.x0 + 1 and particle.position[1] > self.y0:
 
-            self.move_angle(np.pi, 2 * np.pi, particle)
+            self.move_angle(- np.pi / 2, np.pi / 2, particle, 4)
 
         
         # middle left
         if particle.position[1] > self.y0 - 1 and particle.position[1] < self.y0 + 1 and particle.position[0] < self.x0:
 
-            self.move_angle(- np.pi / 2, np.pi / 2, particle)
+            self.move_angle(0, np.pi, particle, 4)
 
         # middle right
         if particle.position[1] > self.y0 - 1 and particle.position[1] < self.y0 + 1 and particle.position[0] > self.x0:
 
-            self.move_angle(np.pi / 2, 3 * np.pi /2, particle)
+            self.move_angle(np.pi, 2 * np.pi, particle, 4)
 
 
         # top left
@@ -133,9 +149,21 @@ class FlowAgg:
 
                 return True
 
-            
-
         return False
+
+
+
+
+    def move_log_spiral(self):
+
+        phi = np.random.rand() * 3 * np.pi
+        a = 0.4
+        b = 0.2
+        x = -a * np.exp(b * phi) * np.cos(phi)
+        y = a * np.exp(b * phi) * np.sin(phi)
+
+        return Particle([x,y,0], self.particle_size)
+
 
 
     def planar_force(self):
@@ -159,39 +187,58 @@ class FlowAgg:
     def grow(self):
 
         render_iter = 0
+        free_particles = []
+        n_stuck = 0
 
         for i_particle in range(self.n_particles):
 
-            particle = self.ini_particle()
+            particle = self.move_log_spiral()
+            free_particles.append(particle)
 
-            while True:
+        
 
-                self.move(particle)
+        # render
+        bpy.context.scene.render.filepath = os.path.join(self.render_out, str(render_iter))
+        bpy.ops.render.render(write_still=True)
+        render_iter += 1
+        """
+        while True:
 
-                if self.close(particle) == True:
+            
+
+            n_stuck = 0
+
+            for f_particle in free_particles:
+
+                if f_particle.stuck == True:
+
+                    n_stuck += 1
+
+                    if n_stuck == len(free_particles):
+                        break
+
+                    continue
+
+                self.move(f_particle)
+
+                if self.close(f_particle) == True:
 
                     # stick particle to aggregate
-                    self.aggregate.append(particle)
-    
-                    # and planar and spring force
-                    planar_target = self.planar_force()
+                    self.aggregate.append(f_particle)
 
-                    for a_particle in self.aggregate:
+                    # set stuck
+                    f_particle.stuck = True
 
-                        spring_target = self.spring_force(a_particle)
-
-                        a_particle.position += 1.2 * (spring_target - a_particle.position) + 1.2 * (planar_target - a_particle.position) 
-                        
-                        a_particle.blender_sphere.location = a_particle.position
-
-                
                     # render
                     bpy.context.scene.render.filepath = os.path.join(self.render_out, str(render_iter))
                     bpy.ops.render.render(write_still=True)
                     render_iter += 1
 
-                    break
+            if n_stuck == len(free_particles):
+                break
 
+                
+        """
                 
                 
 
@@ -199,7 +246,7 @@ def main():
 
     fa = FlowAgg(n_particles=100,
                 jump_amp={"x":0.2, "y":0.2},
-                area={"xm":-5, "xM":5, "ym":-5, "yM":5},
+                area={"xm":0, "ym":0, "radius":10},
                 particle_size=0.2,
                 prox_thresh=0.4,
                 render_out='/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/flow_agg/tmp/'
