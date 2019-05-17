@@ -149,14 +149,21 @@ class Border:
 
         particles = []
 
-        for i in range(n_interpolated):
+        for i in range(n_interpolated-1):
+
+            t += delta
 
             position = (1-t) * p1.position + t * p2.position
             direction = position - self.center
 
             particles.append(Particle(position, direction))
 
-            t += delta
+            
+
+        print("interpolated", p1.position, p2.position)
+        for i in particles:
+            print(i.position)
+
 
         return particles
 
@@ -182,8 +189,12 @@ class Border:
         # move chosen particle
         particle.move(self.move_amp)
         new_particles = []
+        added = 0
 
+        # interpolate 
         if np.linalg.norm(l_particle.position - particle.position) > self.max_dist:
+
+        
 
             new_particles = self.interpolate(particle_idx-1, particle_idx, 3)
 
@@ -196,20 +207,27 @@ class Border:
                 extended_particles.insert(insert_idx, new_p)
                 insert_idx += 1
 
+        
+
+            added = len(new_particles)
+
         if np.linalg.norm(particle.position - r_particle.position) > self.max_dist:
 
+            
             new_particles = self.interpolate(particle_idx, r_idx, 3)
 
-            insert_idx = particle_idx + 1
+            insert_idx = particle_idx + 1 + added
 
             for new_p in new_particles:
 
                 extended_particles.insert(insert_idx, new_p)
                 insert_idx += 1
 
+            
+
         return extended_particles
 
-    def construct_mesh(self, particles):
+    def construct_mesh(self, particles, id):
 
         bm = bmesh.new()
 
@@ -219,10 +237,10 @@ class Border:
         bm.faces.new(bm.verts)
 
         # add a new mesh data
-        layer_mesh_data = bpy.data.meshes.new("mesh"+"_data")  
+        layer_mesh_data = bpy.data.meshes.new(str(id)+"_data")  
 
         # add a new empty mesh object using the mesh data
-        layer_mesh_object = bpy.data.objects.new("mesh"+"_object", layer_mesh_data) 
+        layer_mesh_object = bpy.data.objects.new(str(id)+"_object", layer_mesh_data) 
 
         # make the bmesh the object's mesh
         # transfer bmesh data do mesh data which is connected to empty mesh object
@@ -232,18 +250,19 @@ class Border:
         # add to scene
         bpy.context.scene.objects.link(layer_mesh_object)
     
-    def grow(self, n_iter):
+    def grow_rand(self, n_iter):
 
         for i in range(n_iter):
 
-            particle_idx = np.random.choice(len(self.particles), 1)
+            particle_idx = np.random.choice(len(self.particles)-1, 1)[0]
 
-            extended = self.grow_particle(particle_idx)
+            self.particles = self.grow_particle(particle_idx)
 
-            self.construct_mesh(extended)
+        self.construct_mesh(self.particles, 1)
 
-            self.particles = copy.copy(extended)
+            
 
+        
 
 
         
@@ -251,13 +270,13 @@ class Border:
 
 m = Border(
         n_ini_particles=10,
-        r_ini=1,
+        r_ini=0.2,
         center=[0,0,0],
         max_dist=0.5,
-        move_amp=0.3
+        move_amp=0.2
 )
 
-m.grow(10)
+m.grow_rand(30)
 
 
 
