@@ -7,6 +7,19 @@ import os
 
 class SCACircleBrancher:
 
+    """ #########################################################################
+    CONSTRUCTOR:
+        center - ([x,y,z]) - center of circular SCA
+        n_sca_trees - scalar - number of SCA trees in circular SCA
+        root_circle_radius - scalar - radius of circle where roots will be
+        leaf_center_radius - scalar - radius of circle where leaves centers will be
+        leaves_spread - [x,y,z] - spread of leaves in x,y,z direction
+        n_leaves - scalar - number of leaves in every SCA tree
+        branch_thickness_max - scalar - max thickness of a branch 
+        bevel_radius_delta - scalar - increase of thickness in every iteration
+        name - string - name of circular SCA object
+        color - [r,g,b] - color of SCA circular object
+    ######################################################################### """
     def __init__(self,
                  center,
                  n_sca_trees,
@@ -67,8 +80,7 @@ class SCACircleBrancher:
             sca = SCA(root_position=[xr,yr,zr],
                         leaves_cloud_center=[xl, yl, zl],
                         leaves_spread=self.leaves_spread,
-                        n_leaves=self.n_leaves,
-                        growth_dist={"min":0.5,"max":4}) # play with params
+                        n_leaves=self.n_leaves)
 
             # grow
             sca.grow()
@@ -113,7 +125,10 @@ class SCACircleBrancher:
             self.sca_forest.append(sca_object)
             
         
-        
+    """ #########################################################################
+    For two given nodes in SCA interpolate addition nodes in between and
+    add noise interpolated nodes
+    ######################################################################### """
     def interpolate_nodes(self, v1, v2, n_nodes, rand_amplitude, bm):
         
         helper_nodes = []
@@ -135,7 +150,9 @@ class SCACircleBrancher:
         return helper_nodes
         
 
-
+    """ #########################################################################
+    increase branch thickness 
+    ######################################################################### """
     def emerge_sca_volume(self):
 
         new_radius = self.bevel_object.scale[0] + self.bevel_radius_delta

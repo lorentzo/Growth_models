@@ -1,4 +1,4 @@
-from ps_border import EDEN_PERLIN_PS_BORDER
+from perlin_ps_border import PerlinPSBorder
 from sca_brancher import SCACircleBrancher
 
 import numpy as np
@@ -18,8 +18,10 @@ bpy.data.objects["Camera"].rotation_euler = (0,0,0)
 bpy.data.objects["Lamp"].data.type = 'SUN'
 
 # perlin(eden) and ps layers
-perlin_ps = EDEN_PERLIN_PS_BORDER(center=[0,0,0],
-                                  radius_range=[0.01,16,32])
+perlin_ps = PerlinPSBorder(center=[0,0,0],
+                                  radius_range=[0.01,16,32],
+                                  color_perlin_border=hsv_to_rgb(30.0/360.0, 80.0/100.0, 80.0/100.0),
+                                  color_ps=hsv_to_rgb(30.0/360.0, 80.0/100.0, 80.0/100.0))
 
 perlin_layers, ps_layers, radii = perlin_ps.give_perlin_ps()
 
@@ -130,9 +132,9 @@ while True:
                 if radii[n_perlin_layer] > sca_radius:
                     sca_layer.emerge_sca_volume()
 
-            #bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
-            #bpy.ops.render.render(write_still=True)
-            #render_iter += 1
+            bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
+            bpy.ops.render.render(write_still=True)
+            render_iter += 1
     else:
         ps_layers_done = True
 
@@ -149,9 +151,9 @@ while True:
     if sca_layers_rendered == len(sca_layers):
         sca_layers_done = True
 
-    #bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
-    #bpy.ops.render.render(write_still=True)
-    #render_iter += 1
+    bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
+    bpy.ops.render.render(write_still=True)
+    render_iter += 1
 
     if perlin_layers_done and ps_layers_done and sca_layers_done:
         break

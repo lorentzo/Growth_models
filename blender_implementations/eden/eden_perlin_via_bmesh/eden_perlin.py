@@ -49,6 +49,7 @@ class PerlinCircle:
                         # generate noise value
                         noise_val = noise.noise(pos) # NB: noise elem [-1,1]
                         #noise_val = np.random.rand()
+                        noise_val = np.interp(noise_val, [-1,1], param["noise_amp"])
 
                         # add to radius
                         radius_curr_x = param["radius_xy"][0] + noise_val
@@ -120,8 +121,11 @@ class PerlinCircle:
                 params["layer_name"] = "layer" + str(radius)
 
                 # noise max for perlin arguments x and y (rule of thumb: 1-10) 
-                params["noise_range"] = [0, np.interp(iter, [0, n_radii], [0, 20])]
+                params["noise_range"] = [0, np.interp(iter, [0, n_radii], [1, 20])]
                 params["zoff"] = np.interp(iter, [0,n_radii], [0.23, 0.48])
+                
+                # noise amp
+                params["noise_amp"] = [np.interp(iter, [0, n_radii-1], [0, -1.5]), np.interp(iter, [0, n_radii-1], [0, 1.5])]
 
                 # extrude
                 params["extrude"] = [0,0,np.interp(n_radii-iter, [0,n_radii], [0.01,0.5])]

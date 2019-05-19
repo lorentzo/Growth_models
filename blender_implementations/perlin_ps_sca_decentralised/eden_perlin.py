@@ -4,6 +4,14 @@ import bpy
 import bmesh
 import os
 
+""" ####################################################################################
+CLASS:
+returns:
+        + blender object in shape of perlin circle that needs to be attached to scene
+        + points for every contour
+        + list or radii used
+##################################################################################### """
+
 class PerlinCircle:
 
 
@@ -11,18 +19,17 @@ class PerlinCircle:
         CONSTRUCTOR:
         center: np.array([xc, yc, zc])
         radius_range: np.array([lower, upper, step]) -- starting radius, ending radius and step
-        shape: np.array([s_x, s_y]), s_x and s_y are [0,1] and determine circle/elipse shape
         ##################################################################################### """
         def __init__(self,
                      center,
                      radius_range,
-                     shape
+                     color
                     ):
 
                 # user defined variables
                 self.center = center
                 self.radius_range = radius_range
-                self.shape = shape
+                self.color = color
 
 
         """ ###################################################################
@@ -51,15 +58,14 @@ class PerlinCircle:
 
                         # generate noise value
                         noise_val = noise.noise(pos) # NB: noise elem [-1,1]
-                        #noise_val = np.random.rand()
-
+                        noise_val = np.interp(noise_val, [-1,1], param["noise_amp"])
+                        
                         # add to radius
-                        radius_curr_x = param["radius_xy"][0] + noise_val
-                        radius_curr_y = param["radius_xy"][1] + noise_val
+                        radius_curr = param["radius"] + noise_val
 
                         # create circle point on nosy radius from center
-                        x = self.center[0] + radius_curr_x * np.cos(segment)
-                        y = self.center[1] + radius_curr_y * np.sin(segment)
+                        x = self.center[0] + radius_curr * np.cos(segment)
+                        y = self.center[1] + radius_curr * np.sin(segment)
                         z = self.center[2]
 
                         # add  point to bmesh and container
@@ -97,13 +103,11 @@ class PerlinCircle:
                 params = {}
                 
                 # radius
-                radius_x = radius * self.shape[0]
-                radius_y = radius * self.shape[1]
-                params["radius_xy"] = [radius_x, radius_y]
+                params["radius"] = radius
 
                 # n segments scales with radius
                 # https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
-                err = 0.005
+                err = 0.001
                 th = np.arccos(2 * np.power((1 - err / radius), 2) - 1)
                 params["n_segments"] = np.ceil(2 * np.pi / th)
 
@@ -114,17 +118,13 @@ class PerlinCircle:
                 params["noise_range"] = [0, np.interp(iter, [0, n_radii], [0, 20])]
                 params["zoff"] = np.interp(iter, [0,n_radii], [0.23, 0.48])
 
-                # extrude
-                params["extrude"] = [0,0,np.interp(n_radii-iter, [0,n_radii], [0.01,0.5])]
+                # noise amp
+                params["noise_amp"] = [np.interp(iter, [0, n_radii-1], [0, -1.5]), np.interp(iter, [0, n_radii-1], [0, 1.5])]
 
                 # color
-                r = np.interp(iter, [0, n_radii], [0.9,0.99])
-                g = np.interp(iter, [0, n_radii], [0.7,0.87])
-                b = np.interp(iter, [0, n_radii], [0.4,0.7])
-                params["color"] = [r,g,b]
+                params["color"] = self.color 
 
                 return params
-
 
 
         """ ###################################################################

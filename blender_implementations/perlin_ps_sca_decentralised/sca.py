@@ -108,15 +108,14 @@ class SCA():
                 root_position,
                 leaves_cloud_center,
                 leaves_spread,
-                n_leaves,
-                growth_dist):
+                n_leaves):
 
         # user defined
         self.root_position = root_position
         self.leaf_cloud_center = leaves_cloud_center
         self.leaves_spread = leaves_spread
         self.n_leaves = n_leaves
-        self.growth_dist = growth_dist
+        self.growth_dist = {"min":0.5,"max":4} # play with param
         
         # additional variables
 

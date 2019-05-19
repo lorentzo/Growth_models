@@ -3,17 +3,31 @@ import numpy as np
 import bmesh
 import os
 from colorsys import hsv_to_rgb
-from eden_perlin_ps import PerlinCircle
+from eden_perlin import PerlinCircle
 
-class EDEN_PERLIN_PS_BORDER:
+class PerlinPSBorder:
 
-    def __init__(self, center, radius_range):
+    def __init__(
+        self, 
+        center, 
+        radius_range,
+        color_perlin_border,
+        color_ps):
+
         self.center = center 
         self.radius_range = radius_range
+        self.color_perlin_border = color_perlin_border
+        self.color_ps = color_ps
 
+
+
+    """ #######################################################################################
+    create blender mesh object with particles system using contour points and dupli object
+    for particle system
+    ######################################################################################## """ 
     def define_object(self, points, name, ps_object):
 
-        # create bmesh
+        # create bmesh and add points
         bm = bmesh.new()
         for point in points:
             bm.verts.new(point)
@@ -24,7 +38,7 @@ class EDEN_PERLIN_PS_BORDER:
         bm.to_mesh(mesh_data)
         bm.free()
         
-        # add particle system
+        # add particle system to mesh
         mesh_obj.modifiers.new(name+"_ps", type='PARTICLE_SYSTEM')
         mesh_obj_ps = mesh_obj.particle_systems[0]
         mesh_obj_ps.settings.emit_from = 'VERT'
@@ -36,52 +50,65 @@ class EDEN_PERLIN_PS_BORDER:
         mesh_obj_ps.settings.use_emit_random = False
         mesh_obj_ps.settings.count = len(points)
 
-        return mesh_obj # can reference data and ps
+        return mesh_obj
 
+    """ #######################################################################################
+     ps dupli object
+    ######################################################################################## """ 
     def create_dupli_obj(self):
 
-        # ps object
         # create texture for displacement
         bpy.data.textures.new('diplace_tex', type='VORONOI')
-        # create sphere
+
+        # create sphere (far from camera view)
         bpy.ops.mesh.primitive_uv_sphere_add(location=[1000,10,10], size=1)
+
         # add displacement
         bpy.ops.object.modifier_add(type='DISPLACE')
         bpy.context.object.modifiers["Displace"].texture = bpy.data.textures["diplace_tex"]
+
         # reference dupli object
         dupli_obj = bpy.context.object
         dupli_obj.scale = [2,2,0.1]
+
         # add material/color
         material = bpy.data.materials.new("dupli_material")
-        material.diffuse_color = hsv_to_rgb(30.0/360.0, 80.0/100.0, 80.0/100.0)
+        material.diffuse_color = self.color_ps
         dupli_obj.active_material = material
 
         return dupli_obj
 
-
+    """ #######################################################################################
+    creates perlin border layers
+    creates blender mesh object with particle system
+    ######################################################################################## """ 
     def give_perlin_ps(self):
 
-        # create perlin circles
-        ep = PerlinCircle(center=self.center, 
-                            radius_range=self.radius_range,
-                            shape=np.array([1,1]))
+        # define perlin circles
+        ep = PerlinCircle(
+            center=self.center, 
+            radius_range=self.radius_range,
+            color=self.color_perlin_border)
             
+        # grow
         perlin_layers, perlin_contour, radii = ep.grow()
 
-
-        # create object for particle in ps
+        # create dupli object for particle in ps
         dupli_obj = self.create_dupli_obj()
 
         # add ps for every perlin circle
         ps_layers = []
-        cnt = 1
-        for points in perlin_contour:
-            layer = self.define_object(points, "layer"+str(cnt), dupli_obj)
+        for pc_idx in range(len(perlin_contour)):
+            layer = self.define_object(perlin_contour[pc_idx], "layer"+str(pc_idx), dupli_obj)
             bpy.context.scene.objects.link(layer)
             ps_layers.append(layer)
-            cnt += 1
 
         return perlin_layers, ps_layers, radii
 
+    """ #######################################################################################
+    emerge particle system size
+    ######################################################################################## """ 
+    emerge_ps_area(self):
+        self.particle_systems[0].settings.particle_size += 0.04
 
 
