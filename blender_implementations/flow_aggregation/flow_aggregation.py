@@ -24,7 +24,7 @@ class FlowAgg:
 
     def __init__(
         self, 
-        n_particles, 
+        radius_range,
         jump_amp,
         area,
         particle_size,
@@ -32,7 +32,7 @@ class FlowAgg:
         render_out
     ):
 
-        self.n_particles = n_particles
+        self.radius_range = radius_range
         self.jump_amp = jump_amp
         self.area = area
         self.particle_size = particle_size
@@ -42,8 +42,6 @@ class FlowAgg:
         self.aggregate = []
         self.x0 = area["xm"]
         self.y0 = area["ym"]
-        #self.x0 = (area["xM"] - area["xm"]) / 2 + area["xm"]
-        #self.y0 = (area["yM"] - area["ym"]) / 2 + area["ym"]
         self.aggregate.append(Particle([self.x0, self.y0, 0], particle_size))
 
 
@@ -52,34 +50,8 @@ class FlowAgg:
         phi = np.random.rand() * 2 * np.pi
         x = self.area["radius"] * np.cos(phi)
         y = self.area["radius"] * np.sin(phi)
+
         return Particle([x,y,0], self.particle_size)
-
-
-        """
-
-        r = np.random.rand()
-
-        # bottom spawn
-        if r < 0.25:
-            x = np.random.rand() * (self.area["xM"] - self.area["xm"]) + self.area["xm"]
-            return Particle([x, self.area["ym"], 0], self.particle_size)
-
-        # top spawn
-        if r > 0.25 and r < 0.5:
-            x = np.random.rand() * (self.area["xM"] - self.area["xm"]) + self.area["xm"]
-            return Particle([x, self.area["yM"], 0], self.particle_size)
-
-        # left spawn
-        if r > 0.5 and r < 0.75:
-            y = np.random.rand() * (self.area["yM"] - self.area["ym"]) + self.area["ym"]
-            return Particle([self.area["xm"], y, 0], self.particle_size)
-
-        # right spawn
-        if r > 0.75:
-            y = np.random.rand() * (self.area["yM"] - self.area["ym"]) + self.area["ym"]
-            return Particle([self.area["xM"], y, 0], self.particle_size)
-
-        """
 
 
     def move_angle(self, phi_low, phi_high, particle, add_amp=1):
@@ -141,7 +113,7 @@ class FlowAgg:
             self.move_angle(np.pi / 2, np.pi, particle)
 
 
-    def close(self, particle):
+    def is_close(self, particle):
 
         for a_particle in self.aggregate:
 
@@ -152,99 +124,76 @@ class FlowAgg:
         return False
 
 
+    def add_shape(self, radius, n_particles):
+
+        phis = np.linspace(start=0,
+                           stop=2 * np.pi,
+                           num=n_particles)
+
+        for phi in phis:
+
+            x = radius * np.cos(phi)
+            y = radius * np.sin(phi)
+            self.aggregate.append(Particle([x,y,0], self.particle_size))
 
 
-    def move_log_spiral(self):
 
-        phi = np.random.rand() * 3 * np.pi
-        a = 0.4
-        b = 0.2
-        x = -a * np.exp(b * phi) * np.cos(phi)
-        y = a * np.exp(b * phi) * np.sin(phi)
-
-        return Particle([x,y,0], self.particle_size)
-
-
-
-    def planar_force(self):
-
-        sum_planar = 0
-        for a_particle in self.aggregate:
-            sum_planar += a_particle.position
-
-        return sum_planar / len(self.aggregate)
-
-    def spring_force(self, particle):
-
-        sum_spring = 0
-        for a_particle in self.aggregate:
-            dist = particle.position - a_particle.position
-            dist_norm = dist / np.linalg.norm(dist)
-            sum_spring += a_particle.position + 1.3 * dist_norm
-
-        return  sum_spring / len(self.aggregate) 
 
     def grow(self):
 
         render_iter = 0
-        free_particles = []
         n_stuck = 0
 
-        for i_particle in range(self.n_particles):
+        radii = np.linspace(start=self.radius_range[0], 
+                            stop=self.radius_range[1], 
+                            num=self.radius_range[2])
 
-            particle = self.move_log_spiral()
-            free_particles.append(particle)
+        for radius in radii:
 
-        
+            err = 0.001
+            th = np.arccos(2 * np.power((1 - err / radius), 2) - 1)
+            n_particles = int(np.ceil(2 * np.pi / th))
 
-        # render
-        bpy.context.scene.render.filepath = os.path.join(self.render_out, str(render_iter))
-        bpy.ops.render.render(write_still=True)
-        render_iter += 1
-        """
-        while True:
+            self.add_shape(radius, n_particles)
 
-            
-
+            free_particles = []
             n_stuck = 0
-
-            for f_particle in free_particles:
-
-                if f_particle.stuck == True:
-
-                    n_stuck += 1
-
-                    if n_stuck == len(free_particles):
-                        break
-
-                    continue
-
-                self.move(f_particle)
-
-                if self.close(f_particle) == True:
-
-                    # stick particle to aggregate
-                    self.aggregate.append(f_particle)
-
-                    # set stuck
-                    f_particle.stuck = True
-
-                    # render
-                    bpy.context.scene.render.filepath = os.path.join(self.render_out, str(render_iter))
-                    bpy.ops.render.render(write_still=True)
-                    render_iter += 1
-
-            if n_stuck == len(free_particles):
-                break
-
+            for particle in range(n_particles):
+                free_particles.append(self.ini_particle())
                 
-        """
-                
-                
+            to_add = []
+
+            while True:
+
+                for f_particle in free_particles:
+
+                    if f_particle.stuck == False:
+
+                        self.move(f_particle)
+
+                        if self.is_close(f_particle) == True:
+
+                            # stick particle to aggregate
+                            to_add.append(f_particle)
+
+                            # set stuck
+                            f_particle.stuck = True
+                            n_stuck += 1
+
+                            # render
+                            bpy.context.scene.render.filepath = os.path.join(self.render_out, str(render_iter))
+                            bpy.ops.render.render(write_still=True)
+                            render_iter += 1
+
+                if n_stuck == len(free_particles):
+                    break
+
+            self.aggregate.extend(to_add)
+
 
 def main():
 
-    fa = FlowAgg(n_particles=100,
+    fa = FlowAgg(radius_range=[1, 10, 20],
                 jump_amp={"x":0.2, "y":0.2},
                 area={"xm":0, "ym":0, "radius":10},
                 particle_size=0.2,

@@ -108,7 +108,7 @@ class PerlinPSBorder:
     """ #######################################################################################
     emerge particle system size
     ######################################################################################## """ 
-    emerge_ps_area(self):
-        self.particle_systems[0].settings.particle_size += 0.04
+    def emerge_ps_area(self):
+        pass
 
 

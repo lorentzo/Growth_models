@@ -80,9 +80,11 @@ class SCACircleBrancher:
                     continue
                 v1 = bm.verts.new(branch.position)
                 v2 = bm.verts.new(branch.parent.position)
-                interpolated = self.interpolate_nodes(v1, v2, 2, 0.5, bm)
-                for i in range(len(interpolated)-1):
-                    bm.edges.new((interpolated[i], interpolated[i+1]))
+                bm.edges.new((v1, v2))
+                
+                #interpolated = self.interpolate_nodes(v1, v2, 2, 0.5, bm)
+                #for i in range(len(interpolated)-1):
+                #    bm.edges.new((interpolated[i], interpolated[i+1]))
                 
             # add a new mesh data
             sca_data = bpy.data.meshes.new(self.name+str(n)+"_data")  

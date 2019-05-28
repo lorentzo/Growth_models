@@ -1,5 +1,6 @@
-from perlin_ps_border import PerlinPSBorder
+
 from sca_brancher import SCACircleBrancher
+from perlin_ps_border import PerlinPSBorder
 
 import numpy as np
 import os
@@ -132,9 +133,9 @@ while True:
                 if radii[n_perlin_layer] > sca_radius:
                     sca_layer.emerge_sca_volume()
 
-            bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
-            bpy.ops.render.render(write_still=True)
-            render_iter += 1
+            #bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
+            #bpy.ops.render.render(write_still=True)
+            #render_iter += 1
     else:
         ps_layers_done = True
 
@@ -151,9 +152,9 @@ while True:
     if sca_layers_rendered == len(sca_layers):
         sca_layers_done = True
 
-    bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
-    bpy.ops.render.render(write_still=True)
-    render_iter += 1
+    #bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
+    #bpy.ops.render.render(write_still=True)
+    #render_iter += 1
 
     if perlin_layers_done and ps_layers_done and sca_layers_done:
         break

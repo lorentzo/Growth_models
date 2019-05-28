@@ -15,6 +15,11 @@ scene = bpy.context.scene
 bpy.data.objects["Camera"].location = (0, 0, 50)
 bpy.data.objects["Camera"].rotation_euler = (0,0,0)
 
+# get and configure light
+bpy.data.objects["Lamp"].data.type = 'SUN'
+bpy.data.objects["Lamp"].rotation_euler = [0,0,0]
+bpy.data.objects["Lamp"].location = [0,0,10]
+bpy.data.objects["Lamp"].data.energy = 0.5
 center = np.array([0,0,0])
 
 # eden layer
@@ -40,7 +45,7 @@ scaCL1 = SCACircleBrancher(center=[0,0,0.3],
                           color=hsv_to_rgb(15/360.0,27/100.0,80/100.0))
 
 scaCL1.initialize_sca_forest(scene)
-#sca_layers[scaCL1_radius] = scaCL1
+sca_layers[scaCL1_radius] = scaCL1
 
 # sca layer 2
 scaCL2_radius = 6
@@ -55,14 +60,14 @@ scaCL2 = SCACircleBrancher(center=[0,0,0.3],
                           color=hsv_to_rgb(15/360.0,27/100.0,70/100.0))
 
 scaCL2.initialize_sca_forest(scene)
-#sca_layers[scaCL2_radius] = scaCL2
+sca_layers[scaCL2_radius] = scaCL2
 
 # sca circle layer 3
 scaCL3_radius = 10
 scaCL3 = SCACircleBrancher(center=[0,0,0.3],
                           n_sca_trees=20,
                           root_circle_radius=scaCL3_radius,
-                          leaf_center_radius=scaCL3_radius - 7,
+                          leaf_center_radius=7 - 7,
                           leaves_spread=np.array([8,8,1]),
                           n_leaves=20,
                           branch_thickness_max=0.15,
@@ -85,7 +90,7 @@ scaCL4 = SCACircleBrancher(center=[0,0,0.2],
                           color=hsv_to_rgb(15/360.0,27/100.0,50/100.0))
 
 scaCL4.initialize_sca_forest(scene)
-#sca_layers[scaCL4_radius] = scaCL4
+sca_layers[scaCL4_radius] = scaCL4
 
 # render
 render_out = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/eden_sca_bmesh/tmp/'
@@ -114,7 +119,7 @@ while True:
 
         # render
         bpy.context.scene.render.filepath = os.path.join(render_out, str(render_iter))
-        #bpy.ops.render.render(write_still=True)
+        bpy.ops.render.render(write_still=True)
 
         # check eden 
         eden_layer_idx += 1
