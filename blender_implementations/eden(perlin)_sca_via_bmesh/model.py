@@ -19,7 +19,7 @@ bpy.data.objects["Camera"].rotation_euler = (0,0,0)
 bpy.data.objects["Lamp"].data.type = 'SUN'
 bpy.data.objects["Lamp"].rotation_euler = [0,0,0]
 bpy.data.objects["Lamp"].location = [0,0,10]
-bpy.data.objects["Lamp"].data.energy = 0.5
+bpy.data.objects["Lamp"].data.energy = 0.2
 center = np.array([0,0,0])
 
 # eden layer
@@ -42,7 +42,7 @@ scaCL1 = SCACircleBrancher(center=[0,0,0.3],
                           n_leaves=10,
                           branch_thickness_max=0.1,
                           name='scaCLA',
-                          color=hsv_to_rgb(15/360.0,27/100.0,80/100.0))
+                          color=hsv_to_rgb(30/360.0,50/100.0,50/100.0))
 
 scaCL1.initialize_sca_forest(scene)
 sca_layers[scaCL1_radius] = scaCL1
@@ -57,7 +57,7 @@ scaCL2 = SCACircleBrancher(center=[0,0,0.3],
                           n_leaves=15,
                           branch_thickness_max=0.1,
                           name='scaCLB',
-                          color=hsv_to_rgb(15/360.0,27/100.0,70/100.0))
+                          color=hsv_to_rgb(30/360.0,50/100.0,50/100.0))
 
 scaCL2.initialize_sca_forest(scene)
 sca_layers[scaCL2_radius] = scaCL2
@@ -72,7 +72,7 @@ scaCL3 = SCACircleBrancher(center=[0,0,0.3],
                           n_leaves=20,
                           branch_thickness_max=0.15,
                           name='scaCLC',
-                          color=hsv_to_rgb(15/360.0,27/100.0,60/100.0))
+                          color=hsv_to_rgb(30/360.0,50/100.0,50/100.0))
 
 scaCL3.initialize_sca_forest(scene)
 sca_layers[scaCL3_radius] = scaCL3
@@ -87,7 +87,7 @@ scaCL4 = SCACircleBrancher(center=[0,0,0.2],
                           n_leaves=25,
                           branch_thickness_max=0.20,
                           name='scaCLD',
-                          color=hsv_to_rgb(15/360.0,27/100.0,50/100.0))
+                          color=hsv_to_rgb(30/360.0,50/100.0,50/100.0))
 
 scaCL4.initialize_sca_forest(scene)
 sca_layers[scaCL4_radius] = scaCL4

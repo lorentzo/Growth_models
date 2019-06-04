@@ -4,44 +4,36 @@ import bpy
 import bmesh
 import os
 
-"""
-###################################################################
+""" ###################################################################
 CLASS:
 defines:
         + blender object in shape of perlin 
 		circle that needs to be attached to scene
         + points for every contour
         + list or radii used
-###################################################################
-"""
+################################################################### """
 
 class PerlinCircle:
 
-	"""
-        ##############################################################
+
+        """ ##############################################################
         CONSTRUCTOR:
         center: np.array([xc, yc, zc])
         radius_range: np.array([lower, upper, step]) 
 			-- starting radius, ending radius and step
-        ##############################################################
-	"""
-        def __init__(self,
-                     center,
-                     radius_range,
-                     color
-                    ):
+        ############################################################## """
+        def __init__(self, center, radius_range, color):
 
                 # user defined variables
                 self.center = center
                 self.radius_range = radius_range
                 self.color = color
 
-	"""
-        ####################################################
+
+        """ ####################################################
         For given parameters create blender mesh 
-	object that will contain vertices  of nosy circle
-        ####################################################
-	"""
+        object that will contain vertices  of nosy circle
+        #################################################### """
         def iter_grow(self, param):
 
                 # container for points on contour
@@ -117,11 +109,9 @@ class PerlinCircle:
 		# be extracted via eden_layer_mesh_object.data
                 return layer_mesh_object, contour_points
 
-	"""
-        ###############################################
+        """ ###############################################
         configure parameters for current radius
-        ###############################################
-	"""
+        ############################################### """
         def configure_params(self, radius, n_radii, curr_iter):
 
                 params = {}
@@ -156,12 +146,10 @@ class PerlinCircle:
 
                 return params
 
-	"""
-        ###################################################################
+        """ ###################################################################
         vary initial parameters to achieve growth
         result will be list of mesh objects in different stadium of growth
-        ################################################################### 
-	"""
+        ################################################################### """
         def grow(self):
 
                 # create list of radii: starting_radius, ending radius, step

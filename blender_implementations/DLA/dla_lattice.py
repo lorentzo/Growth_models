@@ -2,6 +2,7 @@ import numpy as np
 import bpy
 import os
 import bmesh
+from colorsys import hsv_to_rgb
 
 class LatticeDLA:
 
@@ -125,6 +126,11 @@ class LatticeDLA:
     def display2(self):
 
         bm = bmesh.new()
+        
+        # bevel object
+        bpy.ops.curve.primitive_nurbs_circle_add()
+        bpy.context.object.scale = (0.1,0.1,0)
+        bevel_object = bpy.context.object
 
         for branch in self.tree:
             
@@ -146,6 +152,19 @@ class LatticeDLA:
         # add mesh object to the scene
         scene = bpy.context.scene
         scene.objects.link(mesh_obj)
+        
+        mesh_obj.select = True
+        bpy.context.scene.objects.active = mesh_obj
+        bpy.ops.object.convert(target='CURVE')
+        mesh_obj.data.bevel_object = bevel_object
+        
+        # add color
+        material = bpy.data.materials.new("material")
+        material.diffuse_color = hsv_to_rgb(30.0/360.0, 80.0/100.0, 80.0/100.0)
+        mesh_obj.active_material = material
+        
+        
+       
 
                     
 

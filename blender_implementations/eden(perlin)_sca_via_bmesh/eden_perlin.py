@@ -3,6 +3,7 @@ import numpy as np
 import bpy
 import bmesh
 import os
+from colorsys import hsv_to_rgb
 
 class PerlinCircle:
 
@@ -126,10 +127,11 @@ class PerlinCircle:
                 params["extrude"] = [0,0,np.interp(n_radii-iter, [0,n_radii], [0.01,0.5])]
 
                 # color
-                r = np.interp(iter, [0, n_radii], [0.9,0.99])
-                g = np.interp(iter, [0, n_radii], [0.7,0.87])
-                b = np.interp(iter, [0, n_radii], [0.4,0.7])
-                params["color"] = [r,g,b]
+                h = 30.0/360.0
+                s = 50.0/100.0
+                v = 50.0/100.0
+                #s = np.interp(iter, [0, n_radii], [45,55])
+                params["color"] = hsv_to_rgb(h,s,v)
 
                 return params
 

@@ -105,10 +105,6 @@ class PerlinPSBorder:
 
         return perlin_layers, ps_layers, radii
 
-    """ #######################################################################################
-    emerge particle system size
-    ######################################################################################## """ 
-    def emerge_ps_area(self):
-        pass
+
 
 
