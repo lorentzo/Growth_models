@@ -1,183 +1,212 @@
-from mathutils import noise
-import numpy as np 
+# -*- coding: utf-8 -*-
+""" This module creates the Perlin border model.
+
+This module creates the circles with perturbed vertices which serve as an
+approximation of Eden model. The perturbed circles are then represented
+as Blender mesh objects.
+
+Contains:
+	PerlinCircle class
+
+"""
+
+# Blender imports.
 import bpy
 import bmesh
-import os
 
-""" ###################################################################
-CLASS:
-defines:
-        + blender object in shape of perlin 
-		circle that needs to be attached to scene
-        + points for every contour
-        + list or radii used
-################################################################### """
+# Standard imports.
+from mathutils import noise
+import numpy as np 
+import os
 
 class PerlinCircle:
 
+	""" Defines the Perlin border model.
 
-        """ ##############################################################
-        CONSTRUCTOR:
-        center: np.array([xc, yc, zc])
-        radius_range: np.array([lower, upper, step]) 
-			-- starting radius, ending radius and step
-        ############################################################## """
-        def __init__(self, center, radius_range, color):
+	Attributes:
+		center (np.array): center of the perturbed circles
+		radius_range (np.array): starting radius, ending radius and step
 
-                # user defined variables
-                self.center = center
-                self.radius_range = radius_range
-                self.color = color
+	Methods:
+		__init__()
+		grow()
+		
+	"""
 
+	def __init__(self, 
+				 center, 
+				 radius_range, 
+				 color):
+			self.center = center
+			self.radius_range = radius_range
+			self.color = color
 
-        """ ####################################################
-        For given parameters create blender mesh 
-        object that will contain vertices  of nosy circle
-        #################################################### """
-        def iter_grow(self, param):
+	def __iter_grow(self, param):
+		""" Creates one perturbed circle
 
-                # container for points on contour
-                contour_points = []
+		Given the parameters, this method is creating one perturbed circle.
+		That is it performs one iteration of growth.
 
-                # create empty bmesh to store vertices of circle
-                bm = bmesh.new()
-        
-                # divide circle in segments
-                circle_segments = np.linspace(0, 
-					      2*np.pi, 
-					      param["n_segments"])
+		Args:
+			param (dict): parameters for creating the perturbed circle.
+		
+		Yields:
+			Blender mesh object: representation of perturbed circle.
+			list: contour points.
 
-                for segment in circle_segments:
+		"""
 
-                        # generate point on a cricle as argument to perlin noise
-                        xoff = np.interp(np.cos(segment), 
-					 [-1,1], 
-				  	 param["noise_range"])
+		# List of points that will be created on the contour.
+		contour_points = []
 
-                        yoff = np.interp(np.sin(segment), 
-					 [-1,1], 
-					 param["noise_range"])
+		# Create empty bmesh to store vertices of circle.
+		bm = bmesh.new()
+	
+		circle_segments = np.linspace(start=0, 
+									  stop=2*np.pi, 
+									  num=param["n_segments"])
 
-                        zoff = param["zoff"]
+		# For every segment in circle create a perturbed vertex.
+		for segment in circle_segments:
 
-                        pos = np.array([xoff, yoff, zoff])
+			xoff = np.interp(x=np.cos(segment), 
+							 xp=[-1,1], 
+							 fp=param["noise_range"])
 
-                        # generate noise value
-                        noise_val = noise.noise(pos) # NB: noise elem [-1,1]
-                        noise_val = np.interp(noise_val, 
-					      [-1,1], 
-					      param["noise_amp"])
-                        
-                        # add to radius
-                        radius_curr = param["radius"] + noise_val
+			yoff = np.interp(x=np.sin(segment), 
+							 xp=[-1,1], 
+						   	 fp=param["noise_range"])
 
-                        # create circle point on nosy radius from center
-                        x = self.center[0] + radius_curr * np.cos(segment)
-                        y = self.center[1] + radius_curr * np.sin(segment)
-                        z = self.center[2]
+			zoff = param["zoff"]
 
-                        # add  point to bmesh and container
-                        bm.verts.new(np.array([x,y,z]))
-                        contour_points.append([x,y,z])
+			pos = np.array([xoff, yoff, zoff])
 
-                # add faces 
-                bm.faces.new(bm.verts)
+			noise_val = noise.noise(pos) # NB: noise elem [-1,1]
+			noise_val = np.interp(x=noise_val, 
+								  xp=[-1,1], 
+								  fp=param["noise_amp"])
+					
+			radius_curr = param["radius"] + noise_val
 
-                # add a new mesh data
-                layer_mesh_data = bpy.data.meshes.new(
-						param["layer_name"]+"_data")  
+			x = self.center[0] + radius_curr * np.cos(segment)
+			y = self.center[1] + radius_curr * np.sin(segment)
+			z = self.center[2]
+		
+			bm.verts.new(np.array([x,y,z]))
+			contour_points.append([x,y,z])
 
-                # add a new empty mesh object using the mesh data
-                layer_mesh_object = bpy.data.objects.new(
-					param["layer_name"]+"_object", 
-					layer_mesh_data) 
+		# Create face from existing vertices.
+		bm.faces.new(bm.verts)
 
-                # make the bmesh the object's mesh
-                # transfer bmesh data do mesh data which 
-		# is connected to empty mesh object
-                bm.to_mesh(layer_mesh_data)
-                bm.free()
+		# Add a new mesh data.
+		layer_mesh_data = bpy.data.meshes.new(param["layer_name"]+"_data")  
 
-                # add color
-                material = bpy.data.materials.new(
-				param["layer_name"]+"_material")
+		# add a new empty mesh object using the mesh data.
+		layer_mesh_object = bpy.data.objects.new(param["layer_name"]+"_object", layer_mesh_data) 
 
-                material.diffuse_color = param["color"]
-                layer_mesh_object.active_material = material
+		# Transform bmesh to mesh.
+		bm.to_mesh(layer_mesh_data)
+		bm.free()
 
-                # return object, data for object can 
-		# be extracted via eden_layer_mesh_object.data
-                return layer_mesh_object, contour_points
+		# Add material and color.
+		material = bpy.data.materials.new(param["layer_name"]+"_material")
+		material.diffuse_color = param["color"]
+		layer_mesh_object.active_material = material
 
-        """ ###############################################
-        configure parameters for current radius
-        ############################################### """
-        def configure_params(self, radius, n_radii, curr_iter):
+		return layer_mesh_object, contour_points
 
-                params = {}
+	def __configure_params(self, radius, n_radii, curr_iter):
+		""" Configures the parameters for next iteration.
+
+		Given the current radius and current iteration configure the rest of
+		parameters that are needed for growth.
+
+		Args:
+			radius (float): current radius.
+			n_radii (int): number of desired radii.
+			curr_iter (int): current iteration of growth.
+
+		Yields:
+			params (dict): contains configured parameters.
+
+		"""
+
+		# Container for parameters.
+		params = {}
                 
-                # radius
-                params["radius"] = radius
+        # radius.
+		params["radius"] = radius
 
-                # n segments scales with radius
-                # https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
-                err = 0.001
-                th = np.arccos(2 * np.power((1 - err / radius), 2) - 1)
-                params["n_segments"] = np.ceil(2 * np.pi / th)
+		# n points on a contour.
+		# https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
+		err = 0.001
+		th = np.arccos(2 * np.power((1 - err / radius), 2) - 1)
+		params["n_segments"] = np.ceil(2 * np.pi / th)
 
-                # layer name
-                params["layer_name"] = "layer" + str(radius)
+        # Layer name.
+		params["layer_name"] = "layer" + str(radius)
 
-                # noise max for perlin arguments x and y (rule of thumb: 1-10) 
-                params["noise_range"] = [0, np.interp(curr_iter, 
-					             [0, n_radii], 
-						     [0, 20])]
+        # x and y positions range in Perlin noise.
+		params["noise_range"] = [
+			0, 
+			np.interp(x=curr_iter, xp=[0, n_radii], fp=[0, 20])
+			]
 
-                params["zoff"] = np.interp(curr_iter, 
-				           [0,n_radii], 
-					   [0.23, 0.48])
+		# z position in Perlin noise.
+		params["zoff"] = np.interp(x=curr_iter, 
+								   xp=[0,n_radii], 
+								   fp=[0.23, 0.48])
 
-                # noise amp
-                params["noise_amp"] = [np.interp(curr_iter, [0, n_radii-1], [0, -1.5]), 
-					np.interp(curr_iter, [0, n_radii-1], [0, 1.5])]
+        # Noise amplitude.
+		params["noise_amp"] = [
+			np.interp(x=curr_iter, xp=[0, n_radii-1], fp=[0, -1.5]), 
+			np.interp(x=curr_iter, xp=[0, n_radii-1], fp=[0, 1.5])
+		]
 
-                # color
-                params["color"] = self.color 
+		# Color.
+		params["color"] = self.color 
 
-                return params
+		return params
 
-        """ ###################################################################
-        vary initial parameters to achieve growth
-        result will be list of mesh objects in different stadium of growth
-        ################################################################### """
-        def grow(self):
+	def grow(self):
+		""" Creates all perturbed circles.
 
-                # create list of radii: starting_radius, ending radius, step
-                radii = np.linspace(self.radius_range[0], 
-				    self.radius_range[1], 
-				    self.radius_range[2])
+		For every specified radius value, perturbed circle is created.
 
-                # list of blender meshes that represent circle growth
-                growth_phases = []
-                curr_iter = 0
+		Args:
+			-
 
-                # list of all contour points
-                contour_points_all = []
+		Yields:
+			list of Blender mesh objects: representation of perturbed circles
+			list of lists: contour points of all perturbed circles
+			list: all radius values
 
-                # every iteration represents radius
-                for radius in radii:
+		"""
 
-                        curr_iter += 1
+		# Create list of radii: starting_radius, ending radius, step.
+		radii = np.linspace(start=self.radius_range[0], 
+							stop=self.radius_range[1], 
+							num=self.radius_range[2])
 
-                        # configure params
-                        params = self.configure_params(radius, len(radii), curr_iter)
+		# List of Blender mesh objects that represent perturbed circles.
+		perturbed_circles_mesh = []
 
-                        # run circle generation for curr params and radius
-                        growth_phase, contour_points = self.iter_grow(params)
+		# List of all contour points of all perturbed circles.
+		contour_points = []
 
-                        # save
-                        growth_phases.append(growth_phase)
-                        contour_points_all.append(contour_points)
+		curr_iter = 0
+		for radius in radii:
 
-                return growth_phases, contour_points_all, radii
+			curr_iter += 1
 
+			# Configure the parameters.
+			params = self.__configure_params(radius, len(radii), curr_iter)
+
+			# Create perturbed circle for current radius.
+			curr_perturbed_circle_mesh, curr_contour_points = self.__iter_grow(params)
+
+			# Save.
+			perturbed_circles_mesh.append(curr_perturbed_circle_mesh)
+			contour_points.append(curr_contour_points)
+
+		return perturbed_circles_mesh, contour_points, radii

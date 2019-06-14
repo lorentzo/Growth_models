@@ -1,25 +1,46 @@
-import bpy
-import numpy as np
-import bmesh
+# -*- coding: utf-8 -*-
+""" Circular branching of SCA model.
+
+This module uses the sca module and creates the circular growth.
+
+Contains:
+    SCACircleBrancher class
+
+"""
+
+#Project specific imports.
 from sca import SCA
+
+# Blender imports
+import bpy
+import bmesh
+
+# Standard imports.
+import numpy as np
 import os
 
 
 class SCACircleBrancher:
+    """ Defines the circular growth of SCA model.
 
-    """ #########################################################################
-    CONSTRUCTOR:
-        center - ([x,y,z]) - center of circular SCA
-        n_sca_trees - scalar - number of SCA trees in circular SCA
-        root_circle_radius - scalar - radius of circle where roots will be
-        leaf_center_radius - scalar - radius of circle where leaves centers will be
-        leaves_spread - [x,y,z] - spread of leaves in x,y,z direction
-        n_leaves - scalar - number of leaves in every SCA tree
-        branch_thickness_max - scalar - max thickness of a branch 
-        bevel_radius_delta - scalar - increase of thickness in every iteration
-        name - string - name of circular SCA object
-        color - [r,g,b] - color of SCA circular object
-    ######################################################################### """
+    Attributes:
+        center (np.array): center of circular SCA.
+        n_sca_trees (int):  number of SCA trees in circular SCA.
+        root_circle_radius (float): radius of circle where roots will be.
+        leaf_center_radius (float): radius of circle where leaves centers will be.
+        leaves_spread (np.array): spread of leaves in x,y,z direction.
+        n_leaves (int): number of leaves in every SCA tree.
+        branch_thickness_max (float): max thickness of a branch.
+        bevel_radius_delta (float): increase of thickness in every iteration.
+        name (string): name of circular SCA object.
+        color (np.array): color of SCA circular object.
+
+    Methods:
+        __init__()
+        initialize_sca_forest()
+        emerge_sca_volume()
+
+    """
     def __init__(self,
                  center,
                  n_sca_trees,
@@ -32,7 +53,7 @@ class SCACircleBrancher:
                  name,
                  color):
 
-        # user defined
+        # User defined.
         self.center = center
         self.n_sca_trees = n_sca_trees
         self.root_circle_radius = root_circle_radius
@@ -42,50 +63,53 @@ class SCACircleBrancher:
         self.name = name
         self.color = color
 
-        # additional
+        # Additional.
         self.sca_forest = []
         self.bevel_radius = 0
         self.bevel_radius_delta = bevel_radius_delta
         self.bevel_radius_max = branch_thickness_max
         self.bevel_object = None
 
-    """ #########################################################################
-    Configure set of sca objects 
-    grow configured set of sca objects
-    create curve from mesh from bmesh of sca objects and add to scene
-    Created curves will be invisible to render so increase volume during iterations 
-        to make them appear
-    ######################################################################### """
     def initialize_sca_forest(self, scene):
+        """ Confiure and grow the set of the SCA objects.
+
+        Args:
+            scene (Blender scene object): scene where SCA objects will be placed.
+
+        Yields:
+            list of Blender curve objects.
+
+        """
 
         segment = 2 * np.pi / self.n_sca_trees
 
-        # create bevel object for volume (ini: 0 volume)
+        # Create bevel object for volume (ini: 0 volume).
         bpy.ops.curve.primitive_nurbs_circle_add()
         bpy.context.object.scale = (0,0,0)
         self.bevel_object = bpy.context.object
 
+        # For every SCA model.
         for n in range(self.n_sca_trees):
 
-            # configure sca root position
+            # Configure SCA root position.
             xr = self.center[0] + np.cos(segment * n) * self.root_circle_radius
             yr = self.center[1] + np.sin(segment * n) * self.root_circle_radius
             zr = self.center[2] + 0
 
-            # configure sca leaf center position
+            # Configure SCA leaf center position.
             xl = self.center[0] + np.cos(segment * n) * self.leaf_center_radius
             yl = self.center[1] + np.sin(segment * n) * self.leaf_center_radius
             zl = self.center[2] + 0
 
+            # Configure SCA and grow.
             sca = SCA(root_position=[xr,yr,zr],
-                        leaves_cloud_center=[xl, yl, zl],
-                        leaves_spread=self.leaves_spread,
-                        n_leaves=self.n_leaves)
+                      leaves_cloud_center=[xl, yl, zl],
+                      leaves_spread=self.leaves_spread,
+                      n_leaves=self.n_leaves)
 
-            # grow
             sca.grow()
 
-            # create mesh
+            # Create mesh.
             bm = bmesh.new()
 
             for branch in sca.branches:
@@ -93,54 +117,64 @@ class SCACircleBrancher:
                     continue
                 v1 = bm.verts.new(branch.position)
                 v2 = bm.verts.new(branch.parent.position)
-                interpolated = self.interpolate_nodes(v1, v2, 4, 0.5, bm)
+                interpolated = self.__interpolate_nodes(v1, v2, 4, 0.5, bm)
                 for i in range(len(interpolated)-1):
                     bm.edges.new((interpolated[i], interpolated[i+1]))
                 
-            # add a new mesh data
+            # Add a new mesh data.
             sca_data = bpy.data.meshes.new(self.name+str(n)+"_data")  
 
-            # add a new empty mesh object using the mesh data
+            # Add a new empty mesh object using the mesh data.
             sca_object = bpy.data.objects.new(self.name+str(n)+"_object", sca_data) 
             
-            # make the bmesh the object's mesh
-            # transfer bmesh data do mesh data which is connected to empty mesh object
+            # Make the bmesh the object's mesh.
+            # Transfer bmesh data do mesh data which is connected to empty mesh object.
             bm.to_mesh(sca_data)
             bm.free()
             
-            # add sca object to scene, convert to curve, add bevel
+            # Add sca object to scene, convert to curve, add bevel.
             scene.objects.link(sca_object) 
             sca_object.select = True
             bpy.context.scene.objects.active = sca_object
             bpy.ops.object.convert(target='CURVE')
             sca_object.data.bevel_object = self.bevel_object
 
-            # add color
+            # Add color.
             material = bpy.data.materials.new(self.name+str(n)+"_material")
             material.diffuse_color = self.color
             sca_object.active_material = material
 
-
-            # store sca_objects
+            # Store
             self.sca_forest.append(sca_object)
             
-        
-    """ #########################################################################
-    For two given nodes in SCA interpolate addition nodes in between and
-    add noise interpolated nodes
-    ######################################################################### """
-    def interpolate_nodes(self, v1, v2, n_nodes, rand_amplitude, bm):
+    def __interpolate_nodes(self, v1, v2, n_nodes, rand_amplitude, bm):
+        """ Interpolates nodes between two existing nodes.
+
+        Given the two existing nodes, interpolate additional nodes with a small
+        amout of noise.
+
+        Args:
+            v1 (Blender vertex object): first node
+            v2 (Blender vertex object): second node
+            n_nodes (int): number of nodes to interpolate
+            rand_amlitude (float): noise amiplitude
+            bm (Blender bmesh object): container for created nodes
+
+        Yields:
+            list of Blender vertex objects: interpolated nodes
+
+        """
         
         helper_nodes = []
         
         for t in range(n_nodes+1):
 
-            # interpolate
+            # Interpolate.
             x = (1 - t / n_nodes) * v1.co[0] + (t / n_nodes) * v2.co[0]
             y = (1 - t / n_nodes) * v1.co[1] + (t / n_nodes) * v2.co[1]
             z = (1 - t / n_nodes) * v1.co[2] + (t / n_nodes) * v2.co[2]
 
-            # add random noise
+            # Add random noise.
             x += np.random.rand() * rand_amplitude
             y += np.random.rand() * rand_amplitude
             #z += np.random.rand() * rand_amplitude
@@ -149,14 +183,15 @@ class SCACircleBrancher:
 
         return helper_nodes
         
-
-    """ #########################################################################
-    increase branch thickness 
-    ######################################################################### """
     def emerge_sca_volume(self):
+        """ Increases the radius of bevel object.
+
+        Increasing the radius of bevel object results in increasing the
+        branch radius.
+        
+        """
 
         new_radius = self.bevel_object.scale[0] + self.bevel_radius_delta
-        print(new_radius,self.bevel_radius_max)
 
         if new_radius < self.bevel_radius_max:
 
@@ -167,6 +202,3 @@ class SCACircleBrancher:
         else:
 
             return True # finished
-
-
-

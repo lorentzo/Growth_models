@@ -1,72 +1,73 @@
-#############################################################################
-# DESCRIPTION:
-# Space colonization algorithm for branching pattern
-#############################################################################
+# -*- coding: utf-8 -*-
+""" Space colonization algorithm for branching pattern.
 
-""" *************************************************************************
-IMPORTS
-************************************************************************* """
+This module defines one SCA object.
 
-########################### STANDARD IMPORTS ################################
+Contains:
+    Branch class
+    Leaf class
+    SCA class
+
+"""
+
+# Blender imports.
+import bpy
+
+# Standard imports.
 import numpy as np 
 import copy
 import math
-import bpy
 import os
 
-""" *************************************************************************
-CLASS
-Helper class: defining one branch:
-    + starting point of branch is position of parent
-    + ending point of branch is position
-    + direction of growth is direction
-************************************************************************* """
-class Branch():
+class Branch:
+    """ Defines the branch of SCA tree
 
-    """ **********************************************************************
-    CONSTRUCTOR
-    ********************************************************************** """
+    Attributes:
+        position (np.array): end vertex of a branch.
+        parent (Branch): parent (containing start vertex) of a branch.
+        direction (np.array): direction of growth.
+
+    Metods:
+        __init__()
+        reset()
+        give_next_branch()
+
+    """
+
     def __init__(self, position, parent, direction):
 
-        # user defined
+        # User defined.
         self.position = position
         self.parent = parent
         self.direction = direction
 
-        # additional variables
+        # Additional variables.
         self.count = 0
         self.original_direction = copy.copy(direction)
         
-
-    """ ******************************************************************
-    PUBLIC HELPER FUNCTION
-    Resets direction of growth and number of leaf influenced the direction
-    ****************************************************************** """
     def reset(self):
-            self.direction = copy.copy(self.original_direction)
-            self.count = 0
+        """ Resets direction of growth and number of leaf influenced the direction."""
+        self.direction = copy.copy(self.original_direction)
+        self.count = 0
 
-    """ ******************************************************************
-    PUBLIC HELPER FUNCTION
-    Create new branch using direction and position of existing one
-    ****************************************************************** """
     def give_next_branch(self):
+        """ Create new branch using direction and position of existing one. """
         next_position = np.array(self.position) + np.array(self.direction)
         next_branch = Branch(next_position, self, copy.copy(self.direction))
         return next_branch
 
+class Leaf:
+    """ Defines attractor point in SCA.
 
-""" *********************************************************************
-CLASS
-Defining position of leaf
-********************************************************************* """
-class Leaf():
+    Attributes:
+        center (np.array): center of attractor points area
+        spread (np.array): spread of attractor points around center
 
-    """ *********************************************************************
-    CONSTRUCTOR
-        center: [xc, yc, zc]
-        spread: [xs, ys, zs]
-    ********************************************************************* """
+    Methods:
+        __init__()
+
+    """
+
     def __init__(self, center, spread):
         
         # user defined
@@ -74,14 +75,11 @@ class Leaf():
         self.spread = spread
         
         # additional variables
-        self.position = self.calculate_leaf_position()
+        self.position = self.__calculate_leaf_position()
         self.reached = False
 
-    """ *********************************************************************
-    PUBLIC HELPER FUNCTION
-    Calculate leaf position based on center and spread
-    ********************************************************************* """
-    def calculate_leaf_position(self):
+    def __calculate_leaf_position(self):
+        """ Calculate leaf position based on center and spread. """
 
         x = np.random.rand(1)[0] * self.spread[0] - self.spread[0] / 2 + self.center[0]
         y = np.random.rand(1)[0] * self.spread[1] - self.spread[1] / 2 + self.center[1]
@@ -89,62 +87,56 @@ class Leaf():
     
         return [x,y,z]
 
-""" *********************************************************************
-CLASS
-Defining Tree as branches and leaves
-NOTE: distribution of leaves is very important!
-********************************************************************* """
-class SCA():
+class SCA:
+    """ Defines a SCA object.
 
-    """ *********************************************************************
-    CONSTRUCTOR
-        root_position: [xr, yr, zr]
-        leaf_cloud_center: [xl, yl, zl]
-        leaf_spread: [sx, sy, sz]
-        n_leaves: scalar
-        growth_dist: {'min':min_dist, 'max':max_dist}
-    ********************************************************************* """
+    Attributes:
+        root_position (np.array): starting vertex of SCA.
+        leaf_cloud_center (np.array): center of attractor points.
+        leaf_spread (np.array): spread of attractor points around center.
+        n_leaves (int): number of attractor points.
+        growth_dist (dict): {'min':min_dist, 'max':max_dist}
+
+    Methods:
+        __init__()
+        grow()
+    
+    """
+
     def __init__(self, 
                 root_position,
                 leaves_cloud_center,
                 leaves_spread,
                 n_leaves):
 
-        # user defined
+        # User defined.
         self.root_position = root_position
         self.leaf_cloud_center = leaves_cloud_center
         self.leaves_spread = leaves_spread
         self.n_leaves = n_leaves
-        self.growth_dist = {"min":0.5,"max":4} # play with param
+        self.growth_dist = {"min":0.5,"max":4} # try different parameters
         
-        # additional variables
-
-        # add leaf cloud
+        # Additional variables.
+        # Leaf cloud.
         self.leaves = []
         for i in range(self.n_leaves):
             self.leaves.append(Leaf(self.leaf_cloud_center, self.leaves_spread))
 
-        # create root of the tree (point without parent) and turn its direction to leafs
+        # Create root of the tree (point without parent) and turn its direction to leafs.
         self.branches = []
         self.root = Branch(self.root_position, None, None)
-        closest_leaf_to_root = self.find_closest_leaf_to_branch(self.root)
+        closest_leaf_to_root = self.__find_closest_leaf_to_branch(self.root)
         root_direction = np.array(closest_leaf_to_root.position) - np.array(self.root.position)
         root_direction /= np.linalg.norm(root_direction)
         self.root.direction = root_direction
         self.branches.append(self.root)
 
+    def __find_closest_leaf_to_branch(self, branch):
+        """ For given branch (think of branch as point!) find closest leaf. """
 
-    """ *********************************************************************
-    PRIVATE HELPER FUNCTION
-    For given branch (think of branch as point!) find closest leaf
-    ********************************************************************* """
-    def find_closest_leaf_to_branch(self, branch):
-
-        # random ini
         closest_dist = math.inf
         closest_leaf = self.leaves[0]
 
-        # find closest leaf
         for leaf in self.leaves:
             dist = np.linalg.norm(np.array(leaf.position)-np.array(branch.position))
             if dist < closest_dist:
@@ -153,22 +145,14 @@ class SCA():
 
         return closest_leaf
 
-    """ *********************************************************************
-    PUBLIC FUNCTION
-    perform growth:
-        + from root till leaves cloud
-        + trough leaves cloud
-    ********************************************************************* """
     def grow(self):
+        """ Performs growth from root to all attractor points. """
 
-        self.grow_to_point_cloud()
-        self.grow_through_point_cloud()
+        self.__grow_to_point_cloud()
+        self.__grow_through_point_cloud()
 
-    """ *********************************************************************
-    PUBLIC FUNCTION
-    first grow branch from root till leaf cloud
-    ********************************************************************* """
-    def grow_to_point_cloud(self):
+    def __grow_to_point_cloud(self):
+        """ Grow branch from root till leaf cloud. """
 
         curr_branch = self.root 
         found = False
@@ -182,53 +166,48 @@ class SCA():
                 if dist < self.growth_dist['max']:
                     found = True
 
-            # create a new branch
+            # Create a new branch
             if not found:
 
                 branch = curr_branch.give_next_branch()
                 curr_branch = branch
                 self.branches.append(curr_branch)
 
-    """ *********************************************************************
-    PUBLIC FUNCTION
-    When branch is reached the leaf cloud start growing branches in leaf cloud
-    ********************************************************************* """
-    def grow_through_point_cloud(self):
+    def __grow_through_point_cloud(self):
+        """ Grow branches through leaf cloud. """
 
-        # number of reached leaves
+        # Number of reached leaves.
         n_reached = 0
 
-        # grow branches as long exist leaves that are not close to branches 
+        # Grow branches as long exist leaves that are not close to branches.
         while n_reached <= self.n_leaves:
 
-            # for every leaf
             for leaf in self.leaves:
 
-                # check if it is not reached
                 if leaf.reached == True:
                     continue
 
                 closest_branch = None
                 record = math.inf
 
-                # try to find closest branch 
+                # For current leaf try to find closest branch.
                 for branch in self.branches:
 
                     dist = np.linalg.norm(np.array(leaf.position) - np.array(branch.position))
 
-                    # for current branch leaf is too close. Leaf should not be considered
+                    # for current branch leaf is too close. Leaf should not be considered.
                     if dist < self.growth_dist['min']:
                         leaf.riched = True
                         n_reached += 1
                         closest_branch = None
                         break
 
-                    # if current branch is closest or no closest branch exists
+                    # If current branch is closest or no closest branch exists.
                     elif closest_branch == None or dist < record:
                         closest_branch = branch
                         record = dist
 
-                # for found clostest branch change direction to current leaf
+                # For found clostest branch change direction to current leaf.
                 if closest_branch != None:
 
                     new_direction = np.array(leaf.position) - np.array(closest_branch.position)
@@ -237,10 +216,10 @@ class SCA():
                     closest_branch.count += 1 
 
 
-                # grow branches according to number of times extended
+                # Grow branches according to number of times extended.
                 for branch in self.branches:
 
-                    # if leaf was influencing the branch add new branch in its direction
+                    # If leaf was influencing the branch add new branch in its direction.
                     if branch.count > 0:
 
                         branch.direction /= branch.count

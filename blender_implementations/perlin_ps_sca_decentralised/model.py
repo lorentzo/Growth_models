@@ -1,24 +1,36 @@
+# -*- coding: utf-8 -*-
+""" Main file.
 
+This file constructs the Perlin border model with particle system
+and SCA layers.
+When all models are constructed it creates Blender objects and 
+performs the rendering.
+
+"""
+
+# Project specific imports.
 from sca_brancher import SCACircleBrancher
 from perlin_ps_border import PerlinPSBorder
 
+# Blender imports.
+import bpy
+
+# Standard imports.
 import numpy as np
 import os
 from colorsys import hsv_to_rgb
 
-import bpy
-
-# get scene
+# Get scene.
 scene = bpy.context.scene
 
-# get and configure camera
+# Get and configure camera.
 bpy.data.objects["Camera"].location = (0, 0, 50)
 bpy.data.objects["Camera"].rotation_euler = (0,0,0)
 
-# get and configure light
+# Get and configure light.
 bpy.data.objects["Lamp"].data.type = 'SUN'
 
-# perlin(eden) and ps layers
+# Configure and grow the Perlin border model.
 perlin_ps = PerlinPSBorder(center=[0,0,0],
                                   radius_range=[0.01,16,32],
                                   color_perlin_border=hsv_to_rgb(30.0/360.0, 80.0/100.0, 80.0/100.0),
@@ -26,10 +38,10 @@ perlin_ps = PerlinPSBorder(center=[0,0,0],
 
 perlin_layers, ps_layers, radii = perlin_ps.give_perlin_ps()
 
-# sca layers
+# Container for SCA layers.
 sca_layers = {}
 
-# sca circle layer 1
+# SCA circle layer 1.
 scaCL1_radius = 2
 scaCL1 = SCACircleBrancher(center=[0,0,0.03],
                           n_sca_trees=10,
@@ -45,7 +57,7 @@ scaCL1 = SCACircleBrancher(center=[0,0,0.03],
 scaCL1.initialize_sca_forest(scene)
 sca_layers[scaCL1_radius] = scaCL1
 
-# sca layer 2
+# SCA layer 2.
 scaCL2_radius = 5
 scaCL2 = SCACircleBrancher(center=[0,0,0.03],
                           n_sca_trees=15,
@@ -61,7 +73,7 @@ scaCL2 = SCACircleBrancher(center=[0,0,0.03],
 scaCL2.initialize_sca_forest(scene)
 sca_layers[scaCL2_radius] = scaCL2
 
-# sca circle layer 3
+# SCA circle layer 3.
 scaCL3_radius = 9
 scaCL3 = SCACircleBrancher(center=[0,0,0.03],
                           n_sca_trees=20,
@@ -77,7 +89,7 @@ scaCL3 = SCACircleBrancher(center=[0,0,0.03],
 scaCL3.initialize_sca_forest(scene)
 sca_layers[scaCL3_radius] = scaCL3
 
-# sca circle layer 4
+# SCA circle layer 4.
 scaCL4_radius = 13
 scaCL4 = SCACircleBrancher(center=[0,0,0.03],
                           n_sca_trees=25,
@@ -94,7 +106,7 @@ scaCL4.initialize_sca_forest(scene)
 sca_layers[scaCL4_radius] = scaCL4
 
 
-# render
+# Rendering.
 render_out = '/home/lovro/Documents/FER/diplomski/growth_models_results/blender_impl/perlin_ps_sca/tmp/'
 render_iter = 0
 
@@ -108,7 +120,7 @@ sca_layers_done = False
 
 while True:
 
-    # render perlin
+    # Render the itration of Perlin border model.
     if n_perlin_layer < len(perlin_layers):
         scene.objects.link(perlin_layers[n_perlin_layer])
     else:
@@ -118,15 +130,13 @@ while True:
     #bpy.ops.render.render(write_still=True)
     #render_iter += 1
 
-    # render ps
+    # Render the iteration of PS layer 
     if n_ps_layer < len(ps_layers):
 
-        # get current layer
         ps_layer = ps_layers[n_ps_layer]
 
         for i in range(5):
             
-            # grow current layer
             ps_layer.particle_systems[0].settings.particle_size += 0.04
 
             for sca_radius, sca_layer in sca_layers.items():
@@ -140,7 +150,7 @@ while True:
         ps_layers_done = True
 
 
-    # render sca
+    # Render SCA iteration.
     sca_layers_rendered = 0
     for sca_radius, sca_layer in sca_layers.items():
         if n_perlin_layer >= len(perlin_layers):
@@ -161,6 +171,3 @@ while True:
 
     n_perlin_layer += 1
     n_ps_layer += 1
-
-
-    
